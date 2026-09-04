@@ -1,4 +1,4 @@
-const CACHE = 'smart-metronome-v3';
+const CACHE = 'smart-metronome-v4';
 
 const ASSETS = [
   './',
