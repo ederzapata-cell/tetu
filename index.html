@@ -39,8 +39,9 @@
     .bpm-wrap{text-align:center;position:relative;z-index:1}
     #bpmDisplay{font-size:clamp(4.8rem,18vw,8rem);font-weight:800;line-height:.85;letter-spacing:-.06em}
     .bpm-label{color:var(--muted);letter-spacing:.16em;font-size:.8rem;margin-top:12px}
-    .beat-count{margin-top:10px;color:var(--accent2);font-weight:700}
-    .bpm-controls{display:grid;grid-template-columns:58px 1fr 58px;gap:10px;align-items:center;margin:10px 0 14px}
+    .beat-count{color:var(--accent2);font-weight:700}
+    .beat-counter-row{display:flex;justify-content:flex-end;align-items:center;margin:0 2px 6px;font-size:.82rem}
+    .bpm-controls{display:grid;grid-template-columns:58px 1fr 58px;gap:10px;align-items:center;margin:0 0 14px}
     .square,.primary,.ghost,.mode button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:16px;min-height:50px}
     .square{font-size:1.4rem}
     input[type=range]{width:100%;accent-color:var(--accent)}
@@ -110,8 +111,11 @@
         <div class="bpm-wrap">
           <div id="bpmDisplay">80</div>
           <div class="bpm-label">BPM</div>
-          <div class="beat-count" id="beatCount">1 / 4</div>
         </div>
+      </div>
+
+      <div class="beat-counter-row">
+        <div class="beat-count" id="beatCount">1 / 4</div>
       </div>
 
       <div class="bpm-controls">
