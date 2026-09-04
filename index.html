@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111318" />
-  <title>Smart Metronome V1</title>
+  <title>Smart Metronome V2</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root{
@@ -62,6 +62,21 @@
     .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:.73rem}
     .flash-layer{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:99;transition:opacity .08s ease;background:rgba(83,168,255,.45)}
     .flash-layer.on{opacity:1}.flash-layer.accent{background:rgba(138,212,255,.65)}
+
+    .volume-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
+    .volume-line output{min-width:44px;text-align:right;color:var(--accent2);font-weight:700;font-size:.8rem}
+    .countdown{
+      position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:4;
+      font-size:clamp(4.5rem,18vw,8.5rem);font-weight:900;letter-spacing:-.05em;
+      color:var(--text);text-shadow:0 8px 40px rgba(0,0,0,.55);opacity:0;transform:scale(.92);
+      transition:opacity .12s ease,transform .12s ease
+    }
+    .countdown.show{opacity:1;transform:scale(1)}
+    .countdown small{display:block;font-size:.14em;letter-spacing:.12em;text-align:center;color:var(--accent2);margin-top:8px}
+    .segmented{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+    .segmented button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:40px;font-size:.8rem}
+    .segmented button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+
     @media(max-width:760px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{display:none}.visual{width:min(78vw,315px)}}
   </style>
 </head>
@@ -71,7 +86,7 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <h1>Smart Metronome <span style="color:var(--accent)">V1</span></h1>
+      <h1>Smart Metronome <span style="color:var(--accent)">V2</span></h1>
       <p>Simple por fuera. Potente por dentro.</p>
     </div>
     <div class="status" id="offlineStatus">Offline ready</div>
@@ -80,6 +95,7 @@
   <div class="grid">
     <section class="card main">
       <div id="visual" class="visual">
+        <div id="countdown" class="countdown"></div>
         <div class="bpm-wrap">
           <div id="bpmDisplay">80</div>
           <div class="bpm-label">BPM</div>
@@ -133,6 +149,12 @@
           </label>
         </div>
         <label class="check"><input id="accentFirst" type="checkbox" checked> Accent first beat</label>
+        <div class="volume-line">
+          <label style="width:100%">Volume
+            <input id="volume" type="range" min="0" max="100" value="70">
+          </label>
+          <output id="volumeValue">70%</output>
+        </div>
       </div>
 
       <div class="section">
@@ -141,18 +163,45 @@
           <label>Duration (min)
             <input id="durationMin" type="number" min="0" max="180" step="0.5" value="1">
           </label>
+          <label>Count-in
+            <select id="countInBars">
+              <option value="0">None</option>
+              <option value="1">1 bar</option>
+              <option value="2">2 bars</option>
+              <option value="4">4 bars</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="row" style="margin-top:9px">
           <label>Increase BPM
             <input id="increaseBpm" type="number" min="-50" max="50" value="5">
           </label>
-        </div>
-        <div class="row" style="margin-top:9px">
-          <label>Every (sec)
-            <input id="increaseEvery" type="number" min="5" max="3600" value="20">
-          </label>
-          <label>Max BPM
+          <label>Target BPM
             <input id="maxBpm" type="number" min="30" max="400" value="120">
           </label>
         </div>
+
+        <div class="segmented">
+          <button id="bySecondsBtn" class="active" type="button">Every seconds</button>
+          <button id="byBarsBtn" type="button">Every bars</button>
+        </div>
+
+        <div class="row" style="margin-top:9px">
+          <label id="secondsLabel">Every (sec)
+            <input id="increaseEvery" type="number" min="1" max="3600" value="20">
+          </label>
+          <label id="barsLabel" style="display:none">Every (bars)
+            <input id="increaseEveryBars" type="number" min="1" max="999" value="8">
+          </label>
+          <label>Countdown
+            <select id="countdownMode">
+              <option value="remaining" selected>Time remaining</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+        </div>
+
         <label class="check"><input id="sessionEnabled" type="checkbox"> Enable programmed session</label>
       </div>
 
@@ -164,7 +213,7 @@
     </aside>
   </div>
 
-  <div class="footer">Smart Metronome V1 · Offline-first prototype</div>
+  <div class="footer">Smart Metronome V2 · Offline-first practice tool</div>
 </div>
 
 <script>
@@ -179,13 +228,23 @@
   const meter = $('meter');
   const soundType = $('soundType');
   const accentFirst = $('accentFirst');
+  const volume = $('volume');
+  const volumeValue = $('volumeValue');
+  const countdown = $('countdown');
+  const countInBars = $('countInBars');
   const fullscreenFlash = $('fullscreenFlash');
   const flashLayer = $('flashLayer');
   const sessionEnabled = $('sessionEnabled');
   const durationMin = $('durationMin');
   const increaseBpm = $('increaseBpm');
   const increaseEvery = $('increaseEvery');
+  const increaseEveryBars = $('increaseEveryBars');
   const maxBpm = $('maxBpm');
+  const countdownMode = $('countdownMode');
+  const bySecondsBtn = $('bySecondsBtn');
+  const byBarsBtn = $('byBarsBtn');
+  const secondsLabel = $('secondsLabel');
+  const barsLabel = $('barsLabel');
   const sessionStatus = $('sessionStatus');
 
   let bpm = 80;
@@ -197,6 +256,11 @@
   let schedulerTimer = null;
   let sessionStart = 0;
   let nextIncreaseAt = 0;
+  let nextIncreaseBar = 0;
+  let completedBars = 0;
+  let progressionUnit = 'seconds';
+  let countInRemainingBeats = 0;
+  let sessionClockStarted = false;
   let tapTimes = [];
   const lookahead = 25;
   const scheduleAheadTime = 0.12;
@@ -224,6 +288,10 @@
     if (audioCtx.state === 'suspended') audioCtx.resume();
   }
 
+  function masterVolume(mult=1) {
+    return Math.max(0, Math.min(1, Number(volume.value) / 100)) * mult;
+  }
+
   function toneAt(time, accent=false) {
     if (mode === 'visual') return;
     ensureAudio();
@@ -241,7 +309,7 @@
       filter.frequency.value = accent ? 1500 : 1200;
       filter.Q.value = 0.8;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(accent ? 0.45 : 0.28, time);
+      gain.gain.setValueAtTime(masterVolume(accent ? 0.45 : 0.28), time);
       gain.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
       src.connect(filter).connect(gain).connect(audioCtx.destination);
       src.start(time); src.stop(time + 0.07);
@@ -259,7 +327,7 @@
       filter.type = 'highpass';
       filter.frequency.value = 6500;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(accent ? 0.24 : 0.13, time);
+      gain.gain.setValueAtTime(masterVolume(accent ? 0.24 : 0.13), time);
       gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
       src.connect(filter).connect(gain).connect(audioCtx.destination);
       src.start(time); src.stop(time + 0.04);
@@ -272,7 +340,7 @@
     osc.frequency.setValueAtTime(
       type === 'wood' ? (accent ? 650 : 500) : (accent ? 420 : 320), time
     );
-    gain.gain.setValueAtTime(type === 'wood' ? (accent ? 0.38 : 0.25) : (accent ? 0.30 : 0.18), time);
+    gain.gain.setValueAtTime(masterVolume(type === 'wood' ? (accent ? 0.38 : 0.25) : (accent ? 0.30 : 0.18)), time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + (type === 'wood' ? 0.05 : 0.075));
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(time); osc.stop(time + 0.08);
@@ -294,9 +362,33 @@
 
   function scheduleNote(beat, time) {
     const accent = accentFirst.checked && beat === 0;
+    const inCountIn = countInRemainingBeats > 0;
+
     toneAt(time, accent);
     const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
-    setTimeout(() => visualBeat(beat, accent), delay);
+
+    setTimeout(() => {
+      if (inCountIn) {
+        const beatsPerBar = Number(meter.value);
+        const beatNumber = beatsPerBar - ((countInRemainingBeats - 1) % beatsPerBar);
+        countdown.innerHTML = `${beatNumber}<small>COUNT IN</small>`;
+        countdown.classList.add('show');
+        visualBeat(beat, accent);
+        countInRemainingBeats--;
+
+        if (countInRemainingBeats <= 0) {
+          setTimeout(() => countdown.classList.remove('show'), 150);
+          sessionStart = performance.now();
+          sessionClockStarted = true;
+          nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
+          nextIncreaseBar = Math.max(1, Number(increaseEveryBars.value));
+          completedBars = 0;
+        }
+      } else {
+        visualBeat(beat, accent);
+        if (beat === 0 && sessionClockStarted) completedBars++;
+      }
+    }, delay);
   }
 
   function nextNote() {
@@ -316,31 +408,56 @@
   }
 
   function checkSession() {
-    if (!isRunning || !sessionEnabled.checked) return;
+    if (!isRunning || !sessionEnabled.checked || !sessionClockStarted) return;
+
     const now = performance.now();
     const elapsed = (now - sessionStart) / 1000;
     const total = Math.max(0, Number(durationMin.value) * 60);
 
     if (total > 0 && elapsed >= total) {
+      const finishedAt = bpm;
       stop();
-      sessionStatus.innerHTML = `<strong>Session complete.</strong><br>Finished at ${bpm} BPM.`;
+      sessionStatus.innerHTML = `<strong>Session complete.</strong><br>Finished at ${finishedAt} BPM.`;
+      countdown.innerHTML = `✓<small>DONE</small>`;
+      countdown.classList.add('show');
+      setTimeout(() => countdown.classList.remove('show'), 1200);
       return;
     }
 
-    const every = Math.max(1, Number(increaseEvery.value));
-    if (elapsed >= nextIncreaseAt) {
-      const inc = Number(increaseBpm.value);
-      const limit = Number(maxBpm.value);
-      const candidate = bpm + inc;
+    const inc = Number(increaseBpm.value);
+    const limit = Number(maxBpm.value);
+    const shouldIncrease =
+      progressionUnit === 'seconds'
+        ? elapsed >= nextIncreaseAt
+        : completedBars >= nextIncreaseBar;
 
+    if (shouldIncrease) {
+      const candidate = bpm + inc;
       if ((inc > 0 && candidate <= limit) || (inc < 0 && candidate >= limit)) {
         setBpm(candidate);
       } else if ((inc > 0 && bpm < limit) || (inc < 0 && bpm > limit)) {
         setBpm(limit);
       }
-      nextIncreaseAt += every;
+
+      if (progressionUnit === 'seconds') {
+        nextIncreaseAt += Math.max(1, Number(increaseEvery.value));
+      } else {
+        nextIncreaseBar += Math.max(1, Number(increaseEveryBars.value));
+      }
     }
-    updateSessionText();
+
+    if (countdownMode.value === 'remaining' && total > 0) {
+      const remaining = Math.max(0, total - elapsed);
+      const whole = Math.ceil(remaining);
+      const mins = Math.floor(whole / 60);
+      const secs = whole % 60;
+      countdown.innerHTML = `${mins}:${String(secs).padStart(2,'0')}<small>REMAINING</small>`;
+      countdown.classList.add('show');
+    } else if (countInRemainingBeats <= 0) {
+      countdown.classList.remove('show');
+    }
+
+    updateSessionText(progressionUnit === 'bars' ? `Bars: ${completedBars}` : '');
   }
 
   function start() {
@@ -349,8 +466,18 @@
     isRunning = true;
     currentBeat = 0;
     nextNoteTime = audioCtx.currentTime + 0.06;
-    sessionStart = performance.now();
-    nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
+    completedBars = 0;
+
+    const bars = Math.max(0, Number(countInBars.value));
+    countInRemainingBeats = bars * Number(meter.value);
+    sessionClockStarted = countInRemainingBeats === 0;
+
+    if (sessionClockStarted) {
+      sessionStart = performance.now();
+      nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
+      nextIncreaseBar = Math.max(1, Number(increaseEveryBars.value));
+    }
+
     schedulerTimer = setInterval(scheduler, lookahead);
     startBtn.textContent = 'Stop';
     startBtn.classList.add('stop');
@@ -364,6 +491,10 @@
     startBtn.textContent = 'Start';
     startBtn.classList.remove('stop');
     currentBeat = 0;
+    countInRemainingBeats = 0;
+    sessionClockStarted = false;
+    completedBars = 0;
+    countdown.classList.remove('show');
     beatCount.textContent = `1 / ${meter.value}`;
     visual.classList.remove('pulse','accent');
     flashLayer.className = 'flash-layer';
@@ -390,6 +521,28 @@
   tapBtn.onclick = tapTempo;
   meter.onchange = () => { currentBeat=0; beatCount.textContent = `1 / ${meter.value}`; };
 
+  volume.oninput = () => {
+    volumeValue.value = `${volume.value}%`;
+    localStorage.setItem('smartMetronomeVolume', volume.value);
+  };
+
+  bySecondsBtn.onclick = () => {
+    progressionUnit = 'seconds';
+    bySecondsBtn.classList.add('active');
+    byBarsBtn.classList.remove('active');
+    secondsLabel.style.display = 'flex';
+    barsLabel.style.display = 'none';
+  };
+
+  byBarsBtn.onclick = () => {
+    progressionUnit = 'bars';
+    byBarsBtn.classList.add('active');
+    bySecondsBtn.classList.remove('active');
+    barsLabel.style.display = 'flex';
+    secondsLabel.style.display = 'none';
+  };
+
+
   document.querySelectorAll('.mode button').forEach(btn => {
     btn.onclick = () => {
       mode = btn.dataset.mode;
@@ -410,6 +563,12 @@
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  }
+
+  const savedVolume = localStorage.getItem('smartMetronomeVolume');
+  if (savedVolume !== null) {
+    volume.value = savedVolume;
+    volumeValue.value = `${savedVolume}%`;
   }
 
   setBpm(80);
