@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111318" />
-  <title>Smart Metronome V3</title>
+  <title>Smart Metronome V4</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root{
@@ -61,6 +61,45 @@
     .session-status strong{color:var(--text)}
     .mini{font-size:.74rem;color:var(--muted);margin-top:6px}
     .footer{margin-top:14px;text-align:center;color:var(--muted);font-size:.73rem}
+
+    .tool-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 16px}
+    .tool-switch button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:14px;min-height:46px;font-weight:800}
+    .tool-switch button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    body.tuner-mode{
+      --accent:#37d6b0;
+      --accent2:#91f0d8;
+      background:radial-gradient(circle at top,rgba(55,214,176,.12),transparent 34rem),var(--bg)
+    }
+    .tuner-panel{display:none}
+    body.tuner-mode .metronome-panel,
+    body.tuner-mode .metronome-side{display:none}
+    body.tuner-mode .tuner-panel{display:block}
+    .tuner-card{padding:22px}
+    .tuner-display{
+      width:min(78vw,360px);aspect-ratio:1;margin:8px auto 20px;border-radius:50%;
+      display:grid;place-items:center;position:relative;text-align:center;
+      background:radial-gradient(circle,rgba(55,214,176,.12),rgba(55,214,176,.025) 52%,transparent 72%);
+      box-shadow:0 0 0 2px rgba(255,255,255,.06) inset;
+      transition:box-shadow .15s ease,background .15s ease,transform .15s ease
+    }
+    .tuner-display.in-tune{
+      background:radial-gradient(circle,rgba(55,214,176,.48),rgba(55,214,176,.08) 58%,transparent 74%);
+      box-shadow:0 0 100px rgba(55,214,176,.55)
+    }
+    .tuner-note{font-size:clamp(5rem,20vw,9rem);font-weight:900;line-height:.85;letter-spacing:-.06em}
+    .tuner-octave{font-size:.28em;color:var(--accent2);margin-left:4px}
+    .tuner-frequency{margin-top:14px;color:var(--muted);font-weight:700}
+    .tuner-status{margin-top:7px;color:var(--accent2);font-weight:900;letter-spacing:.08em;font-size:.78rem}
+    .tuner-meter{margin:8px auto 18px;max-width:620px}
+    .tuner-scale{display:flex;justify-content:space-between;color:var(--muted);font-size:.74rem;margin-bottom:6px}
+    .tuner-track{height:16px;border-radius:999px;background:#10141c;border:1px solid var(--border);position:relative;overflow:visible}
+    .tuner-center{position:absolute;left:50%;top:-5px;bottom:-5px;width:2px;background:var(--accent);transform:translateX(-50%)}
+    .tuner-needle{position:absolute;left:50%;top:-8px;width:4px;height:30px;border-radius:999px;background:var(--text);transform:translateX(-50%);transition:left .08s linear}
+    .tuner-readout{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px;color:var(--muted);font-size:.8rem}
+    .tuner-readout strong{color:var(--text);font-size:1rem}
+    .tuner-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:620px;margin:0 auto}
+    .tuner-message{max-width:620px;margin:12px auto 0;text-align:center;color:var(--muted);font-size:.8rem;line-height:1.45}
+
     .flash-layer{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:99;transition:opacity .08s ease;background:rgba(83,168,255,.45)}
     .flash-layer.on{opacity:1}.flash-layer.accent{background:rgba(138,212,255,.65)}
 
@@ -112,14 +151,19 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <h1>Smart Metronome <span style="color:var(--accent)">V3</span></h1>
+      <h1>Smart Metronome <span style="color:var(--accent)">V4</span></h1>
       <p>Simple por fuera. Potente por dentro.</p>
     </div>
     <div class="status" id="offlineStatus">Offline ready</div>
   </div>
 
+  <div class="tool-switch">
+    <button id="metronomeToolBtn" class="active" type="button">METRONOME</button>
+    <button id="tunerToolBtn" type="button">TUNER</button>
+  </div>
+
   <div class="grid">
-    <section class="card main">
+    <section class="card main metronome-panel">
       <div id="visual" class="visual">
         <div class="bpm-wrap">
           <div id="bpmDisplay">80</div>
@@ -144,7 +188,7 @@
       </div>
     </section>
 
-    <aside class="card side">
+    <aside class="card side metronome-side">
       <div class="section">
         <h2>Output</h2>
         <div class="mode">
@@ -298,7 +342,43 @@
     </aside>
   </div>
 
-  <div class="footer">Smart Metronome V3 · Offline-first practice tool</div>
+  <section class="card tuner-panel tuner-card">
+    <div class="tuner-display" id="tunerDisplay">
+      <div>
+        <div class="tuner-note"><span id="tunerNote">—</span><span class="tuner-octave" id="tunerOctave"></span></div>
+        <div class="tuner-frequency" id="tunerFrequency">Waiting for microphone</div>
+        <div class="tuner-status" id="tunerStatus">TUNER READY</div>
+      </div>
+    </div>
+
+    <div class="tuner-meter">
+      <div class="tuner-scale"><span>−50</span><span>−25</span><span>0 cents</span><span>+25</span><span>+50</span></div>
+      <div class="tuner-track">
+        <div class="tuner-center"></div>
+        <div class="tuner-needle" id="tunerNeedle"></div>
+      </div>
+      <div class="tuner-readout">
+        <span>Reference <strong>A4 = <span id="referenceValue">440</span> Hz</strong></span>
+        <span><strong id="centsValue">0</strong> cents</span>
+      </div>
+    </div>
+
+    <div class="tuner-controls">
+      <button class="primary" id="startTunerBtn" type="button">Start Tuner</button>
+      <label>Reference A4
+        <select id="referencePitch">
+          <option value="438">438 Hz</option>
+          <option value="439">439 Hz</option>
+          <option value="440" selected>440 Hz</option>
+          <option value="441">441 Hz</option>
+          <option value="442">442 Hz</option>
+        </select>
+      </label>
+    </div>
+    <div class="tuner-message" id="tunerMessage">Chromatic tuner · Audio is analyzed locally on this device and is not uploaded anywhere.</div>
+  </section>
+
+  <div class="footer">Smart Metronome V4 · Metronome + Chromatic Tuner · Offline-first</div>
 </div>
 
 <script>
@@ -331,6 +411,20 @@
   const secondsLabel = $('secondsLabel');
   const barsLabel = $('barsLabel');
   const sessionStatus = $('sessionStatus');
+
+  const metronomeToolBtn = $('metronomeToolBtn');
+  const tunerToolBtn = $('tunerToolBtn');
+  const tunerDisplay = $('tunerDisplay');
+  const tunerNote = $('tunerNote');
+  const tunerOctave = $('tunerOctave');
+  const tunerFrequency = $('tunerFrequency');
+  const tunerStatus = $('tunerStatus');
+  const tunerNeedle = $('tunerNeedle');
+  const centsValue = $('centsValue');
+  const startTunerBtn = $('startTunerBtn');
+  const referencePitch = $('referencePitch');
+  const referenceValue = $('referenceValue');
+  const tunerMessage = $('tunerMessage');
 
   const normalModeBtn = $('normalModeBtn');
   const silentModeBtn = $('silentModeBtn');
@@ -373,6 +467,186 @@
   let ladderNextBar = 0;
   const lookahead = 25;
   const scheduleAheadTime = 0.12;
+
+  let tunerStream = null;
+  let tunerSource = null;
+  let tunerAnalyser = null;
+  let tunerBuffer = null;
+  let tunerRAF = null;
+  let tunerRunning = false;
+  const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+
+  function switchTool(tool) {
+    const tuner = tool === 'tuner';
+    document.body.classList.toggle('tuner-mode', tuner);
+    metronomeToolBtn.classList.toggle('active', !tuner);
+    tunerToolBtn.classList.toggle('active', tuner);
+
+    if (tuner && isRunning) stop();
+    if (!tuner && tunerRunning) stopTuner();
+  }
+
+  function autoCorrelate(buffer, sampleRate) {
+    let size = buffer.length;
+    let rms = 0;
+    for (let i = 0; i < size; i++) rms += buffer[i] * buffer[i];
+    rms = Math.sqrt(rms / size);
+    if (rms < 0.01) return -1;
+
+    let r1 = 0, r2 = size - 1, threshold = 0.2;
+    for (let i = 0; i < size / 2; i++) {
+      if (Math.abs(buffer[i]) < threshold) { r1 = i; break; }
+    }
+    for (let i = 1; i < size / 2; i++) {
+      if (Math.abs(buffer[size - i]) < threshold) { r2 = size - i; break; }
+    }
+
+    buffer = buffer.slice(r1, r2);
+    size = buffer.length;
+    const correlations = new Array(size).fill(0);
+
+    for (let offset = 0; offset < size; offset++) {
+      let correlation = 0;
+      for (let i = 0; i < size - offset; i++) {
+        correlation += buffer[i] * buffer[i + offset];
+      }
+      correlations[offset] = correlation;
+    }
+
+    let d = 0;
+    while (d + 1 < size && correlations[d] > correlations[d + 1]) d++;
+
+    let maxValue = -1, maxPos = -1;
+    for (let i = d; i < size; i++) {
+      if (correlations[i] > maxValue) {
+        maxValue = correlations[i];
+        maxPos = i;
+      }
+    }
+
+    if (maxPos <= 0) return -1;
+
+    let T0 = maxPos;
+    if (T0 > 0 && T0 < size - 1) {
+      const x1 = correlations[T0 - 1];
+      const x2 = correlations[T0];
+      const x3 = correlations[T0 + 1];
+      const a = (x1 + x3 - 2 * x2) / 2;
+      const b = (x3 - x1) / 2;
+      if (a) T0 = T0 - b / (2 * a);
+    }
+
+    return sampleRate / T0;
+  }
+
+  function updateTunerDisplay(frequency) {
+    if (!frequency || frequency < 20 || frequency > 5000) {
+      tunerNote.textContent = '—';
+      tunerOctave.textContent = '';
+      tunerFrequency.textContent = 'Listening…';
+      tunerStatus.textContent = 'PLAY A NOTE';
+      tunerDisplay.classList.remove('in-tune');
+      return;
+    }
+
+    const ref = Number(referencePitch.value);
+    const midi = Math.round(69 + 12 * Math.log2(frequency / ref));
+    const target = ref * Math.pow(2, (midi - 69) / 12);
+    const cents = 1200 * Math.log2(frequency / target);
+    const noteIndex = ((midi % 12) + 12) % 12;
+    const octave = Math.floor(midi / 12) - 1;
+    const clamped = Math.max(-50, Math.min(50, cents));
+    const inTune = Math.abs(cents) <= 5;
+
+    tunerNote.textContent = NOTE_NAMES[noteIndex];
+    tunerOctave.textContent = octave;
+    tunerFrequency.textContent = `${frequency.toFixed(1)} Hz`;
+    centsValue.textContent = `${cents > 0 ? '+' : ''}${Math.round(cents)}`;
+    tunerNeedle.style.left = `${50 + clamped}%`;
+
+    if (inTune) {
+      tunerStatus.textContent = 'IN TUNE';
+      tunerDisplay.classList.add('in-tune');
+    } else if (cents < 0) {
+      tunerStatus.textContent = 'FLAT · TUNE UP';
+      tunerDisplay.classList.remove('in-tune');
+    } else {
+      tunerStatus.textContent = 'SHARP · TUNE DOWN';
+      tunerDisplay.classList.remove('in-tune');
+    }
+  }
+
+  function tunerLoop() {
+    if (!tunerRunning || !tunerAnalyser) return;
+    tunerAnalyser.getFloatTimeDomainData(tunerBuffer);
+    const frequency = autoCorrelate(tunerBuffer, audioCtx.sampleRate);
+    updateTunerDisplay(frequency);
+    tunerRAF = requestAnimationFrame(tunerLoop);
+  }
+
+  async function startTuner() {
+    if (tunerRunning) {
+      stopTuner();
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      tunerMessage.textContent = 'Microphone access is not supported by this browser.';
+      return;
+    }
+
+    try {
+      ensureAudio();
+      tunerStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+
+      tunerSource = audioCtx.createMediaStreamSource(tunerStream);
+      tunerAnalyser = audioCtx.createAnalyser();
+      tunerAnalyser.fftSize = 4096;
+      tunerAnalyser.smoothingTimeConstant = 0;
+      tunerBuffer = new Float32Array(tunerAnalyser.fftSize);
+      tunerSource.connect(tunerAnalyser);
+
+      tunerRunning = true;
+      startTunerBtn.textContent = 'Stop Tuner';
+      startTunerBtn.classList.add('stop');
+      tunerMessage.textContent = 'Listening through the microphone · audio stays on this device.';
+      tunerLoop();
+    } catch (err) {
+      tunerMessage.textContent = 'Microphone permission is required to use the tuner.';
+    }
+  }
+
+  function stopTuner() {
+    tunerRunning = false;
+    if (tunerRAF) cancelAnimationFrame(tunerRAF);
+    tunerRAF = null;
+    if (tunerSource) {
+      try { tunerSource.disconnect(); } catch(e) {}
+      tunerSource = null;
+    }
+    if (tunerStream) {
+      tunerStream.getTracks().forEach(track => track.stop());
+      tunerStream = null;
+    }
+    tunerAnalyser = null;
+    tunerBuffer = null;
+    startTunerBtn.textContent = 'Start Tuner';
+    startTunerBtn.classList.remove('stop');
+    tunerNote.textContent = '—';
+    tunerOctave.textContent = '';
+    tunerFrequency.textContent = 'Waiting for microphone';
+    tunerStatus.textContent = 'TUNER READY';
+    centsValue.textContent = '0';
+    tunerNeedle.style.left = '50%';
+    tunerDisplay.classList.remove('in-tune');
+    tunerMessage.textContent = 'Chromatic tuner · Audio is analyzed locally on this device and is not uploaded anywhere.';
+  }
 
   function setBpm(value) {
     bpm = Math.max(30, Math.min(400, Math.round(Number(value))));
@@ -783,6 +1057,13 @@
     };
   });
 
+  metronomeToolBtn.onclick = () => switchTool('metronome');
+  tunerToolBtn.onclick = () => switchTool('tuner');
+  startTunerBtn.onclick = startTuner;
+  referencePitch.onchange = () => {
+    referenceValue.textContent = referencePitch.value;
+  };
+
   document.addEventListener('keydown', e => {
     if (e.code === 'Space' && !['INPUT','SELECT','BUTTON'].includes(document.activeElement.tagName)) {
       e.preventDefault();
@@ -804,6 +1085,7 @@
     volumeValue.value = `${savedVolume}%`;
   }
 
+  switchTool('metronome');
   setPracticeMode('normal');
   setBpm(80);
 })();
