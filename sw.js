@@ -1,9 +1,20 @@
-const CACHE = 'tetu-v1';
+const CACHE = 'tetu-v2';
 
 const ASSETS = [
   './',
   './index.html',
-  './manifest.webmanifest'
+  './manifest.webmanifest',
+
+  './assets/tetu-logo-horizontal-transparent.png',
+
+  './assets/tetu-icon-32.png',
+  './assets/tetu-icon-48.png',
+  './assets/tetu-icon-180.png',
+  './assets/tetu-icon-192.png',
+  './assets/tetu-icon-512.png',
+  './assets/tetu-maskable-512.png',
+
+  './assets/tetu-og-1200x630.png'
 ];
 
 self.addEventListener('install', event => {
@@ -33,8 +44,7 @@ self.addEventListener('fetch', event => {
 
   if (request.method !== 'GET') return;
 
-  // Para la página principal:
-  // intenta obtener siempre la versión más reciente de internet.
+  // HTML / navegación: primero internet, luego caché.
   if (request.mode === 'navigate') {
     event.respondWith(
       fetch(request)
@@ -53,8 +63,7 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // Para otros archivos:
-  // primero caché, después internet.
+  // Assets: primero caché, luego internet.
   event.respondWith(
     caches.match(request).then(cached => {
       if (cached) return cached;
