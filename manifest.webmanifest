@@ -1,0 +1,9 @@
+{
+  "name": "Smart Metronome",
+  "short_name": "Metronome",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0d0f13",
+  "theme_color": "#111318",
+  "description": "Offline-first programmable metronome for music practice."
+}
