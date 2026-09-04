@@ -4,18 +4,18 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111318" />
-  <title>Smart Metronome V4</title>
+  <title>TeTu — Tempo & Tune</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root{
       --bg:#0d0f13;--panel:#151922;--panel2:#1c2230;--text:#f5f7fb;--muted:#9aa6b6;
-      --accent:#53a8ff;--accent2:#8ad4ff;--danger:#ff6b6b;--border:rgba(255,255,255,.08);
+      --accent:#2EC4B6;--accent2:#2EC4B6;--danger:#ff6b6b;--border:rgba(255,255,255,.08);
       --shadow:0 18px 60px rgba(0,0,0,.35)
     }
     *{box-sizing:border-box}
     body{
       margin:0;min-height:100vh;color:var(--text);
-      background:radial-gradient(circle at top,rgba(83,168,255,.12),transparent 34rem),var(--bg);
+      background:radial-gradient(circle at top,rgba(46,196,182,.12),transparent 34rem),var(--bg);
       font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
     }
     button,input,select{font:inherit}
@@ -30,12 +30,12 @@
     .main{padding:22px}.side{padding:18px;display:flex;flex-direction:column;gap:14px}
     .visual{
       width:min(76vw,340px);aspect-ratio:1;margin:4px auto 18px;border-radius:50%;display:grid;place-items:center;
-      background:radial-gradient(circle,rgba(83,168,255,.12),rgba(83,168,255,.025) 50%,transparent 70%);
+      background:radial-gradient(circle,rgba(46,196,182,.12),rgba(46,196,182,.025) 50%,transparent 70%);
       position:relative;transition:transform .07s ease,background .07s ease,box-shadow .07s ease
     }
     .visual::before{content:"";position:absolute;inset:12%;border:2px solid rgba(255,255,255,.08);border-radius:50%}
-    .visual.pulse{transform:scale(1.055);box-shadow:0 0 80px rgba(83,168,255,.38);background:radial-gradient(circle,rgba(83,168,255,.48),rgba(83,168,255,.08) 56%,transparent 72%)}
-    .visual.accent{box-shadow:0 0 100px rgba(138,212,255,.7);background:radial-gradient(circle,rgba(138,212,255,.7),rgba(83,168,255,.12) 58%,transparent 72%)}
+    .visual.pulse{transform:scale(1.055);box-shadow:0 0 80px rgba(46,196,182,.38);background:radial-gradient(circle,rgba(46,196,182,.48),rgba(46,196,182,.08) 56%,transparent 72%)}
+    .visual.accent{box-shadow:0 0 100px rgba(138,212,255,.7);background:radial-gradient(circle,rgba(138,212,255,.7),rgba(46,196,182,.12) 58%,transparent 72%)}
     .bpm-wrap{text-align:center;position:relative;z-index:1}
     #bpmDisplay{font-size:clamp(4.8rem,18vw,8rem);font-weight:800;line-height:.85;letter-spacing:-.06em}
     .bpm-label{color:var(--muted);letter-spacing:.16em;font-size:.8rem;margin-top:12px}
@@ -50,7 +50,7 @@
     .primary.stop{background:linear-gradient(180deg,#ff8585,#ed5959);color:#251010}
     .ghost{font-weight:700}
     .mode{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-    .mode button{min-height:42px;font-size:.85rem}.mode button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .mode button{min-height:42px;font-size:.85rem}.mode button.active{outline:2px solid var(--accent);background:rgba(46,196,182,.14)}
     .section{border-top:1px solid var(--border);padding-top:14px}.section:first-child{border-top:0;padding-top:0}
     .section h2{font-size:.95rem;margin:0 0 10px}
     .row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
@@ -64,11 +64,11 @@
 
     .tool-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 16px}
     .tool-switch button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:14px;min-height:46px;font-weight:800}
-    .tool-switch button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .tool-switch button.active{outline:2px solid var(--accent);background:rgba(46,196,182,.14)}
     body.tuner-mode{
-      --accent:#37d6b0;
-      --accent2:#91f0d8;
-      background:radial-gradient(circle at top,rgba(55,214,176,.12),transparent 34rem),var(--bg)
+      --accent:#FF8A5B;
+      --accent2:#FF8A5B;
+      background:radial-gradient(circle at top,rgba(255,138,91,.12),transparent 34rem),var(--bg)
     }
     .tuner-panel{display:none}
     body.tuner-mode .metronome-panel,
@@ -78,13 +78,13 @@
     .tuner-display{
       width:min(78vw,360px);aspect-ratio:1;margin:8px auto 20px;border-radius:50%;
       display:grid;place-items:center;position:relative;text-align:center;
-      background:radial-gradient(circle,rgba(55,214,176,.12),rgba(55,214,176,.025) 52%,transparent 72%);
+      background:radial-gradient(circle,rgba(255,138,91,.12),rgba(255,138,91,.025) 52%,transparent 72%);
       box-shadow:0 0 0 2px rgba(255,255,255,.06) inset;
       transition:box-shadow .15s ease,background .15s ease,transform .15s ease
     }
     .tuner-display.in-tune{
-      background:radial-gradient(circle,rgba(55,214,176,.48),rgba(55,214,176,.08) 58%,transparent 74%);
-      box-shadow:0 0 100px rgba(55,214,176,.55)
+      background:radial-gradient(circle,rgba(255,138,91,.48),rgba(255,138,91,.08) 58%,transparent 74%);
+      box-shadow:0 0 100px rgba(255,138,91,.55)
     }
     .tuner-note{font-size:clamp(5rem,20vw,9rem);font-weight:900;line-height:.85;letter-spacing:-.06em}
     .tuner-octave{font-size:.28em;color:var(--accent2);margin-left:4px}
@@ -100,7 +100,7 @@
     .tuner-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:620px;margin:0 auto}
     .tuner-message{max-width:620px;margin:12px auto 0;text-align:center;color:var(--muted);font-size:.8rem;line-height:1.45}
 
-    .flash-layer{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:99;transition:opacity .08s ease;background:rgba(83,168,255,.45)}
+    .flash-layer{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:99;transition:opacity .08s ease;background:rgba(46,196,182,.45)}
     .flash-layer.on{opacity:1}.flash-layer.accent{background:rgba(138,212,255,.65)}
 
     .volume-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
@@ -129,16 +129,16 @@
     }
     .segmented{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
     .segmented button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:40px;font-size:.8rem}
-    .segmented button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .segmented button.active{outline:2px solid var(--accent);background:rgba(46,196,182,.14)}
 
     .practice-mode{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
     .practice-mode button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:42px;font-size:.78rem}
-    .practice-mode button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .practice-mode button.active{outline:2px solid var(--accent);background:rgba(46,196,182,.14)}
     .practice-options{display:none;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:14px;background:#10141c}
     .practice-options.show{display:block}
     .subdivision-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
     .subdivision-grid button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;font-size:.78rem}
-    .subdivision-grid button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .subdivision-grid button.active{outline:2px solid var(--accent);background:rgba(46,196,182,.14)}
     .mode-note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:8px}
 
 
@@ -151,7 +151,7 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <h1>Smart Metronome <span style="color:var(--accent)">V4</span></h1>
+      <h1><span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></h1>
       <p>Simple por fuera. Potente por dentro.</p>
     </div>
     <div class="status" id="offlineStatus">Offline ready</div>
@@ -378,7 +378,7 @@
     <div class="tuner-message" id="tunerMessage">Chromatic tuner · Audio is analyzed locally on this device and is not uploaded anywhere.</div>
   </section>
 
-  <div class="footer">Smart Metronome V4 · Metronome + Chromatic Tuner · Offline-first</div>
+  <div class="footer"><strong><span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></strong> · Tempo & Tune · Your musical core.</div>
 </div>
 
 <script>
