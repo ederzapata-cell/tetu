@@ -40,7 +40,7 @@
     #bpmDisplay{font-size:clamp(4.8rem,18vw,8rem);font-weight:800;line-height:.85;letter-spacing:-.06em}
     .bpm-label{color:var(--muted);letter-spacing:.16em;font-size:.8rem;margin-top:12px}
     .beat-count{color:var(--accent2);font-weight:700}
-    .beat-counter-row{display:flex;justify-content:flex-end;align-items:center;margin:0 2px 6px;font-size:.82rem}
+    .beat-counter-row{display:flex;justify-content:space-between;align-items:center;margin:0 2px 7px;font-size:.82rem;min-height:22px}
     .bpm-controls{display:grid;grid-template-columns:58px 1fr 58px;gap:10px;align-items:center;margin:0 0 14px}
     .square,.primary,.ghost,.mode button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:16px;min-height:50px}
     .square{font-size:1.4rem}
@@ -66,14 +66,25 @@
 
     .volume-line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin-top:10px}
     .volume-line output{min-width:44px;text-align:right;color:var(--accent2);font-weight:700;font-size:.8rem}
-    .countdown{
-      position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:4;
-      font-size:clamp(4.5rem,18vw,8.5rem);font-weight:900;letter-spacing:-.05em;
-      color:var(--text);text-shadow:0 8px 40px rgba(0,0,0,.55);opacity:0;transform:scale(.92);
-      transition:opacity .12s ease,transform .12s ease
+    .session-indicator{
+      pointer-events:none;
+      font-size:.82rem;
+      font-weight:800;
+      color:var(--text);
+      opacity:0;
+      transform:translateY(2px);
+      transition:opacity .12s ease,transform .12s ease;
+      min-width:90px;
+      text-align:left
     }
-    .countdown.show{opacity:1;transform:scale(1)}
-    .countdown small{display:block;font-size:.14em;letter-spacing:.12em;text-align:center;color:var(--accent2);margin-top:8px}
+    .session-indicator.show{opacity:1;transform:translateY(0)}
+    .session-indicator small{
+      display:inline;
+      font-size:.78em;
+      letter-spacing:.08em;
+      color:var(--accent2);
+      margin-left:5px
+    }
     .segmented{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
     .segmented button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:40px;font-size:.8rem}
     .segmented button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
@@ -107,7 +118,6 @@
   <div class="grid">
     <section class="card main">
       <div id="visual" class="visual">
-        <div id="countdown" class="countdown"></div>
         <div class="bpm-wrap">
           <div id="bpmDisplay">80</div>
           <div class="bpm-label">BPM</div>
@@ -115,6 +125,7 @@
       </div>
 
       <div class="beat-counter-row">
+        <div id="sessionIndicator" class="session-indicator"></div>
         <div class="beat-count" id="beatCount">1 / 4</div>
       </div>
 
@@ -301,7 +312,7 @@
   const accentFirst = $('accentFirst');
   const volume = $('volume');
   const volumeValue = $('volumeValue');
-  const countdown = $('countdown');
+  const sessionIndicator = $('sessionIndicator');
   const countInBars = $('countInBars');
   const fullscreenFlash = $('fullscreenFlash');
   const flashLayer = $('flashLayer');
@@ -490,13 +501,13 @@
       if (inCountIn) {
         const beatsPerBar = Number(meter.value);
         const beatNumber = beatsPerBar - ((countInRemainingBeats - 1) % beatsPerBar);
-        countdown.innerHTML = `${beatNumber}<small>COUNT IN</small>`;
-        countdown.classList.add('show');
+        sessionIndicator.innerHTML = `${beatNumber}<small>COUNT IN</small>`;
+        sessionIndicator.classList.add('show');
         visualBeat(beat, accent);
         countInRemainingBeats--;
 
         if (countInRemainingBeats <= 0) {
-          setTimeout(() => countdown.classList.remove('show'), 150);
+          setTimeout(() => sessionIndicator.classList.remove('show'), 150);
           sessionStart = performance.now();
           sessionClockStarted = true;
           nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
@@ -556,9 +567,9 @@
       const finishedAt = bpm;
       stop();
       sessionStatus.innerHTML = `<strong>Session complete.</strong><br>Finished at ${finishedAt} BPM.`;
-      countdown.innerHTML = `✓<small>DONE</small>`;
-      countdown.classList.add('show');
-      setTimeout(() => countdown.classList.remove('show'), 1200);
+      sessionIndicator.innerHTML = `✓<small>DONE</small>`;
+      sessionIndicator.classList.add('show');
+      setTimeout(() => sessionIndicator.classList.remove('show'), 1200);
       return;
     }
 
@@ -619,10 +630,10 @@
       const whole = Math.ceil(remaining);
       const mins = Math.floor(whole / 60);
       const secs = whole % 60;
-      countdown.innerHTML = `${mins}:${String(secs).padStart(2,'0')}<small>REMAINING</small>`;
-      countdown.classList.add('show');
+      sessionIndicator.innerHTML = `${mins}:${String(secs).padStart(2,'0')}<small>REMAINING</small>`;
+      sessionIndicator.classList.add('show');
     } else if (countInRemainingBeats <= 0) {
-      countdown.classList.remove('show');
+      sessionIndicator.classList.remove('show');
     }
 
     let extra = '';
@@ -676,7 +687,7 @@
     completedBars = 0;
     silentCycleBar = 0;
     silentCurrently = false;
-    countdown.classList.remove('show');
+    sessionIndicator.classList.remove('show');
     beatCount.textContent = `1 / ${meter.value}`;
     visual.classList.remove('pulse','accent');
     flashLayer.className = 'flash-layer';
