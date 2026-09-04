@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <meta name="theme-color" content="#111318" />
-  <title>Smart Metronome V2</title>
+  <title>Smart Metronome V3</title>
   <link rel="manifest" href="manifest.webmanifest">
   <style>
     :root{
@@ -77,6 +77,17 @@
     .segmented button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:40px;font-size:.8rem}
     .segmented button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
 
+    .practice-mode{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .practice-mode button{border:1px solid var(--border);color:var(--text);background:#10141c;border-radius:12px;min-height:42px;font-size:.78rem}
+    .practice-mode button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .practice-options{display:none;margin-top:10px;padding:10px;border:1px solid var(--border);border-radius:14px;background:#10141c}
+    .practice-options.show{display:block}
+    .subdivision-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+    .subdivision-grid button{border:1px solid var(--border);color:var(--text);background:var(--panel2);border-radius:12px;min-height:40px;font-size:.78rem}
+    .subdivision-grid button.active{outline:2px solid var(--accent);background:rgba(83,168,255,.14)}
+    .mode-note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:8px}
+
+
     @media(max-width:760px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{display:none}.visual{width:min(78vw,315px)}}
   </style>
 </head>
@@ -86,7 +97,7 @@
 <div class="app">
   <div class="topbar">
     <div class="brand">
-      <h1>Smart Metronome <span style="color:var(--accent)">V2</span></h1>
+      <h1>Smart Metronome <span style="color:var(--accent)">V3</span></h1>
       <p>Simple por fuera. Potente por dentro.</p>
     </div>
     <div class="status" id="offlineStatus">Offline ready</div>
@@ -158,6 +169,62 @@
       </div>
 
       <div class="section">
+        <h2>Practice Mode</h2>
+        <div class="practice-mode">
+          <button id="normalModeBtn" class="active" type="button">Normal</button>
+          <button id="silentModeBtn" type="button">Silent Bars</button>
+          <button id="ladderModeBtn" type="button">Ladder</button>
+          <button id="subdivisionModeBtn" type="button">Subdivisions</button>
+        </div>
+
+        <div id="silentOptions" class="practice-options">
+          <div class="row">
+            <label>Play bars
+              <input id="playBars" type="number" min="1" max="32" value="4">
+            </label>
+            <label>Silent bars
+              <input id="silentBars" type="number" min="1" max="32" value="2">
+            </label>
+          </div>
+          <label class="check"><input id="silentVisual" type="checkbox"> Keep visual pulse during silent bars</label>
+          <div class="mode-note">Example: 4 bars with click → 2 bars silent → repeat.</div>
+        </div>
+
+        <div id="ladderOptions" class="practice-options">
+          <div class="row">
+            <label>Top BPM
+              <input id="ladderTop" type="number" min="30" max="400" value="120">
+            </label>
+            <label>Step
+              <input id="ladderStep" type="number" min="1" max="50" value="5">
+            </label>
+          </div>
+          <div class="row" style="margin-top:9px">
+            <label>Every
+              <input id="ladderEvery" type="number" min="1" max="999" value="4">
+            </label>
+            <label>Unit
+              <select id="ladderUnit">
+                <option value="bars" selected>Bars</option>
+                <option value="seconds">Seconds</option>
+              </select>
+            </label>
+          </div>
+          <div class="mode-note">Climbs from the current BPM to Top BPM, then returns to the starting BPM.</div>
+        </div>
+
+        <div id="subdivisionOptions" class="practice-options">
+          <div class="subdivision-grid">
+            <button id="subQuarter" class="active" data-sub="1" type="button">Quarter</button>
+            <button id="subEighth" data-sub="2" type="button">Eighth</button>
+            <button id="subTriplet" data-sub="3" type="button">Triplet</button>
+            <button id="subSixteenth" data-sub="4" type="button">Sixteenth</button>
+          </div>
+          <div class="mode-note">The main beat remains stronger; subdivisions are lighter clicks between beats.</div>
+        </div>
+      </div>
+
+      <div class="section">
         <h2>Practice Session</h2>
         <div class="row">
           <label>Duration (min)
@@ -213,7 +280,7 @@
     </aside>
   </div>
 
-  <div class="footer">Smart Metronome V2 · Offline-first practice tool</div>
+  <div class="footer">Smart Metronome V3 · Offline-first practice tool</div>
 </div>
 
 <script>
@@ -247,6 +314,21 @@
   const barsLabel = $('barsLabel');
   const sessionStatus = $('sessionStatus');
 
+  const normalModeBtn = $('normalModeBtn');
+  const silentModeBtn = $('silentModeBtn');
+  const ladderModeBtn = $('ladderModeBtn');
+  const subdivisionModeBtn = $('subdivisionModeBtn');
+  const silentOptions = $('silentOptions');
+  const ladderOptions = $('ladderOptions');
+  const subdivisionOptions = $('subdivisionOptions');
+  const playBars = $('playBars');
+  const silentBars = $('silentBars');
+  const silentVisual = $('silentVisual');
+  const ladderTop = $('ladderTop');
+  const ladderStep = $('ladderStep');
+  const ladderEvery = $('ladderEvery');
+  const ladderUnit = $('ladderUnit');
+
   let bpm = 80;
   let isRunning = false;
   let currentBeat = 0;
@@ -262,6 +344,15 @@
   let countInRemainingBeats = 0;
   let sessionClockStarted = false;
   let tapTimes = [];
+  let practiceMode = 'normal';
+  let subdivision = 1;
+  let subIndex = 0;
+  let silentCycleBar = 0;
+  let silentCurrently = false;
+  let ladderStartBpm = 80;
+  let ladderDirection = 1;
+  let ladderNextAt = 0;
+  let ladderNextBar = 0;
   const lookahead = 25;
   const scheduleAheadTime = 0.12;
 
@@ -346,6 +437,20 @@
     osc.start(time); osc.stop(time + 0.08);
   }
 
+  function subdivisionToneAt(time) {
+    if (mode === 'visual') return;
+    ensureAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(900, time);
+    gain.gain.setValueAtTime(masterVolume(0.09), time);
+    gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(time);
+    osc.stop(time + 0.04);
+  }
+
   function visualBeat(beat, accent) {
     if (mode === 'sound') return;
     beatCount.textContent = `${beat + 1} / ${meter.value}`;
@@ -364,7 +469,17 @@
     const accent = accentFirst.checked && beat === 0;
     const inCountIn = countInRemainingBeats > 0;
 
-    toneAt(time, accent);
+    if (practiceMode === 'silent' && !inCountIn) {
+      const play = Math.max(1, Number(playBars.value));
+      const silent = Math.max(1, Number(silentBars.value));
+      const cycle = play + silent;
+      silentCurrently = (silentCycleBar % cycle) >= play;
+    } else {
+      silentCurrently = false;
+    }
+
+    if (!silentCurrently || inCountIn) toneAt(time, accent);
+
     const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
 
     setTimeout(() => {
@@ -383,12 +498,31 @@
           nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
           nextIncreaseBar = Math.max(1, Number(increaseEveryBars.value));
           completedBars = 0;
+          silentCycleBar = 0;
+          ladderStartBpm = bpm;
+          ladderDirection = 1;
+          ladderNextAt = Math.max(1, Number(ladderEvery.value));
+          ladderNextBar = Math.max(1, Number(ladderEvery.value));
         }
       } else {
-        visualBeat(beat, accent);
-        if (beat === 0 && sessionClockStarted) completedBars++;
+        if (!silentCurrently || silentVisual.checked || practiceMode !== 'silent') {
+          visualBeat(beat, accent);
+        }
+
+        if (beat === 0 && sessionClockStarted) {
+          completedBars++;
+          if (practiceMode === 'silent') silentCycleBar++;
+        }
       }
     }, delay);
+
+    if (practiceMode === 'subdivision' && subdivision > 1 && !inCountIn && !silentCurrently) {
+      const beatDuration = 60 / bpm;
+      for (let i = 1; i < subdivision; i++) {
+        const subTime = time + (beatDuration * i / subdivision);
+        subdivisionToneAt(subTime);
+      }
+    }
   }
 
   function nextNote() {
@@ -408,13 +542,13 @@
   }
 
   function checkSession() {
-    if (!isRunning || !sessionEnabled.checked || !sessionClockStarted) return;
+    if (!isRunning || !sessionClockStarted) return;
 
     const now = performance.now();
     const elapsed = (now - sessionStart) / 1000;
-    const total = Math.max(0, Number(durationMin.value) * 60);
+    const total = sessionEnabled.checked ? Math.max(0, Number(durationMin.value) * 60) : 0;
 
-    if (total > 0 && elapsed >= total) {
+    if (sessionEnabled.checked && total > 0 && elapsed >= total) {
       const finishedAt = bpm;
       stop();
       sessionStatus.innerHTML = `<strong>Session complete.</strong><br>Finished at ${finishedAt} BPM.`;
@@ -424,29 +558,59 @@
       return;
     }
 
-    const inc = Number(increaseBpm.value);
-    const limit = Number(maxBpm.value);
-    const shouldIncrease =
-      progressionUnit === 'seconds'
-        ? elapsed >= nextIncreaseAt
-        : completedBars >= nextIncreaseBar;
+    if (practiceMode === 'ladder') {
+      const top = Math.max(ladderStartBpm, Number(ladderTop.value));
+      const step = Math.max(1, Number(ladderStep.value));
+      const every = Math.max(1, Number(ladderEvery.value));
+      const reached =
+        ladderUnit.value === 'seconds'
+          ? elapsed >= ladderNextAt
+          : completedBars >= ladderNextBar;
 
-    if (shouldIncrease) {
-      const candidate = bpm + inc;
-      if ((inc > 0 && candidate <= limit) || (inc < 0 && candidate >= limit)) {
+      if (reached) {
+        let candidate = bpm + (step * ladderDirection);
+
+        if (ladderDirection > 0 && candidate >= top) {
+          candidate = top;
+          ladderDirection = -1;
+        } else if (ladderDirection < 0 && candidate <= ladderStartBpm) {
+          candidate = ladderStartBpm;
+          setBpm(candidate);
+          stop();
+          sessionStatus.innerHTML = `<strong>Ladder complete.</strong><br>Returned to ${candidate} BPM.`;
+          return;
+        }
+
         setBpm(candidate);
-      } else if ((inc > 0 && bpm < limit) || (inc < 0 && bpm > limit)) {
-        setBpm(limit);
-      }
 
-      if (progressionUnit === 'seconds') {
-        nextIncreaseAt += Math.max(1, Number(increaseEvery.value));
-      } else {
-        nextIncreaseBar += Math.max(1, Number(increaseEveryBars.value));
+        if (ladderUnit.value === 'seconds') ladderNextAt += every;
+        else ladderNextBar += every;
+      }
+    } else if (sessionEnabled.checked) {
+      const inc = Number(increaseBpm.value);
+      const limit = Number(maxBpm.value);
+      const shouldIncrease =
+        progressionUnit === 'seconds'
+          ? elapsed >= nextIncreaseAt
+          : completedBars >= nextIncreaseBar;
+
+      if (shouldIncrease) {
+        const candidate = bpm + inc;
+        if ((inc > 0 && candidate <= limit) || (inc < 0 && candidate >= limit)) {
+          setBpm(candidate);
+        } else if ((inc > 0 && bpm < limit) || (inc < 0 && bpm > limit)) {
+          setBpm(limit);
+        }
+
+        if (progressionUnit === 'seconds') {
+          nextIncreaseAt += Math.max(1, Number(increaseEvery.value));
+        } else {
+          nextIncreaseBar += Math.max(1, Number(increaseEveryBars.value));
+        }
       }
     }
 
-    if (countdownMode.value === 'remaining' && total > 0) {
+    if (sessionEnabled.checked && countdownMode.value === 'remaining' && total > 0) {
       const remaining = Math.max(0, total - elapsed);
       const whole = Math.ceil(remaining);
       const mins = Math.floor(whole / 60);
@@ -457,7 +621,13 @@
       countdown.classList.remove('show');
     }
 
-    updateSessionText(progressionUnit === 'bars' ? `Bars: ${completedBars}` : '');
+    let extra = '';
+    if (practiceMode === 'silent') extra = silentCurrently ? 'Silent bars' : 'Click bars';
+    if (practiceMode === 'ladder') extra = `Ladder ${ladderDirection > 0 ? '↑' : '↓'} · start ${ladderStartBpm}`;
+    if (practiceMode === 'subdivision') extra = `Subdivision ×${subdivision}`;
+    if (progressionUnit === 'bars' && practiceMode === 'normal') extra = `Bars: ${completedBars}`;
+
+    updateSessionText(extra);
   }
 
   function start() {
@@ -467,6 +637,10 @@
     currentBeat = 0;
     nextNoteTime = audioCtx.currentTime + 0.06;
     completedBars = 0;
+    silentCycleBar = 0;
+    silentCurrently = false;
+    ladderStartBpm = bpm;
+    ladderDirection = 1;
 
     const bars = Math.max(0, Number(countInBars.value));
     countInRemainingBeats = bars * Number(meter.value);
@@ -476,6 +650,8 @@
       sessionStart = performance.now();
       nextIncreaseAt = Math.max(1, Number(increaseEvery.value));
       nextIncreaseBar = Math.max(1, Number(increaseEveryBars.value));
+      ladderNextAt = Math.max(1, Number(ladderEvery.value));
+      ladderNextBar = Math.max(1, Number(ladderEvery.value));
     }
 
     schedulerTimer = setInterval(scheduler, lookahead);
@@ -494,6 +670,8 @@
     countInRemainingBeats = 0;
     sessionClockStarted = false;
     completedBars = 0;
+    silentCycleBar = 0;
+    silentCurrently = false;
     countdown.classList.remove('show');
     beatCount.textContent = `1 / ${meter.value}`;
     visual.classList.remove('pulse','accent');
@@ -543,6 +721,43 @@
   };
 
 
+  function setPracticeMode(nextMode) {
+    practiceMode = nextMode;
+    const map = {
+      normal: normalModeBtn,
+      silent: silentModeBtn,
+      ladder: ladderModeBtn,
+      subdivision: subdivisionModeBtn
+    };
+    [normalModeBtn, silentModeBtn, ladderModeBtn, subdivisionModeBtn]
+      .forEach(btn => btn.classList.toggle('active', btn === map[nextMode]));
+
+    silentOptions.classList.toggle('show', nextMode === 'silent');
+    ladderOptions.classList.toggle('show', nextMode === 'ladder');
+    subdivisionOptions.classList.toggle('show', nextMode === 'subdivision');
+
+    if (!isRunning) updateSessionText(
+      nextMode === 'normal' ? '' :
+      nextMode === 'silent' ? 'Silent Bars ready.' :
+      nextMode === 'ladder' ? 'Ladder ready.' :
+      `Subdivisions ×${subdivision} ready.`
+    );
+  }
+
+  normalModeBtn.onclick = () => setPracticeMode('normal');
+  silentModeBtn.onclick = () => setPracticeMode('silent');
+  ladderModeBtn.onclick = () => setPracticeMode('ladder');
+  subdivisionModeBtn.onclick = () => setPracticeMode('subdivision');
+
+  document.querySelectorAll('[data-sub]').forEach(btn => {
+    btn.onclick = () => {
+      subdivision = Number(btn.dataset.sub);
+      document.querySelectorAll('[data-sub]').forEach(b => b.classList.toggle('active', b === btn));
+      if (!isRunning) updateSessionText(`Subdivisions ×${subdivision} ready.`);
+    };
+  });
+
+
   document.querySelectorAll('.mode button').forEach(btn => {
     btn.onclick = () => {
       mode = btn.dataset.mode;
@@ -571,6 +786,7 @@
     volumeValue.value = `${savedVolume}%`;
   }
 
+  setPracticeMode('normal');
   setBpm(80);
 })();
 </script>
