@@ -163,9 +163,9 @@
     .account-pill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
     .account-pill button{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
     .trial-badge{font-size:.78rem;color:var(--text);border:1px solid var(--border);background:rgba(46,196,182,.08);padding:7px 11px;border-radius:999px;font-weight:800}
-    .access-overlay{position:fixed;inset:0;z-index:500;background:rgba(5,8,11,.88);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:18px}
+    .access-overlay{position:fixed;inset:0;z-index:500;background:rgba(5,8,11,.88);backdrop-filter:blur(12px);display:none;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;-webkit-overflow-scrolling:touch}
     .access-overlay.show{display:flex}
-    .access-card{width:min(94vw,470px);background:var(--panel);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow);padding:26px}
+    .access-card{width:min(94vw,470px);background:var(--panel);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow);padding:26px;margin:auto 0}
     .access-card h1{margin:0 0 7px;font-size:1.65rem}
     .access-card p{color:var(--muted);line-height:1.5;margin:7px 0 18px}
     .access-card input{width:100%;border:1px solid var(--border);background:#10141c;color:var(--text);border-radius:13px;padding:12px;margin:5px 0;min-height:46px}
@@ -174,6 +174,8 @@
     .access-actions .login-btn,.buy-btn{border:0;background:linear-gradient(180deg,#43d8ca,#2EC4B6);color:#071816}
     .access-message{min-height:20px;margin-top:10px;color:var(--muted);font-size:.8rem;line-height:1.4}
     .access-message.error{color:#ff8585}
+    .forgot-password{display:block;width:max-content;max-width:100%;margin:7px 0 0 auto;padding:0;border:0;background:transparent;color:#73ddd4;font-size:.78rem;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+    .forgot-password:hover{color:#9ce9e3}
     .buy-btn{width:100%;margin-top:8px;font-size:1rem}
     .price{font-size:2rem;font-weight:900;margin:10px 0 0;color:var(--text)}
     .payment-box{margin:14px 0 10px;padding:14px;border:1px solid var(--border);border-radius:18px;background:#10141c;text-align:center}
@@ -198,6 +200,7 @@
       <p>Try every feature free: <strong>10 sessions · 1 minute each.</strong> Create an account so your trial and license stay with you.</p>
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
       <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
+      <button id="forgotPasswordBtn" class="forgot-password" type="button">Forgot your password?</button>
       <div class="access-actions">
         <button id="loginBtn" class="login-btn" type="button">Sign in</button>
         <button id="registerBtn" type="button">Create account</button>
@@ -784,8 +787,34 @@
     }
   }
 
+  async function resetPassword() {
+    const email = authEmail.value.trim();
+    authMessage.classList.remove('error');
+
+    if (!email) {
+      authMessage.classList.add('error');
+      authMessage.textContent = 'Enter your email first, then tap “Forgot your password?”.';
+      authEmail.focus();
+      return;
+    }
+
+    authMessage.textContent = 'Sending password reset email…';
+
+    try {
+      await auth.sendPasswordResetEmail(email);
+      authMessage.textContent = 'Password reset email sent. Check your inbox and spam folder.';
+    } catch (err) {
+      authMessage.classList.add('error');
+      authMessage.textContent =
+        err.code === 'auth/invalid-email'
+          ? 'Enter a valid email address.'
+          : (err.message || 'Could not send the password reset email.');
+    }
+  }
+
   $('loginBtn').onclick = login;
   $('registerBtn').onclick = register;
+  $('forgotPasswordBtn').onclick = resetPassword;
 
   accountBtn.onclick = () => {
     if (accessUser) auth.signOut();
@@ -808,8 +837,8 @@
     ].join('\n');
 
     const url = `https://wa.me/${TEKKI_WHATSAPP}?text=${encodeURIComponent(message)}`;
-    window.open(url, '_blank', 'noopener,noreferrer');
-    buyMessage.textContent = 'Attach your payment receipt in WhatsApp. TEKKI will activate this TeTu account after verifying the transfer.';
+    buyMessage.textContent = 'Opening WhatsApp…';
+    window.location.href = url;
   };
 
   $('checkActivationBtn').onclick = async () => {
