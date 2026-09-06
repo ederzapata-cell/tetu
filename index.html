@@ -159,18 +159,68 @@
     .mode-note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:8px}
 
 
+    /* TeTu access / trial */
+    .account-pill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .account-pill button{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
+    .trial-badge{font-size:.78rem;color:var(--text);border:1px solid var(--border);background:rgba(46,196,182,.08);padding:7px 11px;border-radius:999px;font-weight:800}
+    .access-overlay{position:fixed;inset:0;z-index:500;background:rgba(5,8,11,.88);backdrop-filter:blur(12px);display:none;align-items:center;justify-content:center;padding:18px}
+    .access-overlay.show{display:flex}
+    .access-card{width:min(94vw,470px);background:var(--panel);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow);padding:26px}
+    .access-card h1{margin:0 0 7px;font-size:1.65rem}
+    .access-card p{color:var(--muted);line-height:1.5;margin:7px 0 18px}
+    .access-card input{width:100%;border:1px solid var(--border);background:#10141c;color:var(--text);border-radius:13px;padding:12px;margin:5px 0;min-height:46px}
+    .access-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
+    .access-actions button,.buy-btn{border:1px solid var(--border);border-radius:14px;min-height:48px;font-weight:900}
+    .access-actions .login-btn,.buy-btn{border:0;background:linear-gradient(180deg,#43d8ca,#2EC4B6);color:#071816}
+    .access-message{min-height:20px;margin-top:10px;color:var(--muted);font-size:.8rem;line-height:1.4}
+    .access-message.error{color:#ff8585}
+    .buy-btn{width:100%;margin-top:8px;font-size:1rem}
+    .price{font-size:2rem;font-weight:900;margin:10px 0 0;color:var(--text)}
+    .tiny-access{font-size:.72rem;color:var(--muted);margin-top:10px;text-align:center}
+    @media(max-width:760px){.account-pill{justify-content:flex-start}.access-actions{grid-template-columns:1fr}}
+
     @media(max-width:760px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{display:none}.visual{width:min(78vw,315px)}}
   </style>
 </head>
 <body>
 <div id="flashLayer" class="flash-layer"></div>
 
+<div id="accessOverlay" class="access-overlay show">
+  <div class="access-card">
+    <div id="authView">
+      <h1>Welcome to <span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></h1>
+      <p>Try every feature free: <strong>10 sessions · 5 minutes each.</strong> Create an account so your trial and license stay with you.</p>
+      <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
+      <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
+      <div class="access-actions">
+        <button id="loginBtn" class="login-btn" type="button">Sign in</button>
+        <button id="registerBtn" type="button">Create account</button>
+      </div>
+      <div id="authMessage" class="access-message"></div>
+    </div>
+    <div id="lockedView" style="display:none">
+      <h1>Your TeTu trial is complete.</h1>
+      <p>You used your 10 full trial sessions. Unlock TeTu permanently and keep every feature.</p>
+      <div class="price">$29,900 COP</div>
+      <p>One payment · Lifetime access · No subscription.</p>
+      <button id="buyBtn" class="buy-btn" type="button">UNLOCK TETU</button>
+      <button id="lockedLogoutBtn" type="button" style="width:100%;margin-top:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;min-height:44px;font-weight:800">Use another account</button>
+      <div id="buyMessage" class="access-message"></div>
+    </div>
+    <div class="tiny-access">TeTu · Tempo & Tune · Your musical core.</div>
+  </div>
+</div>
+
+
 <div class="app">
   <div class="topbar">
     <div class="brand">
       <img src="assets/tetu-logo-horizontal-transparent.png" alt="TeTu — Tempo & Tune" class="brand-logo">
     </div>
-    <div class="status" id="offlineStatus">Offline ready</div>
+    <div class="account-pill">
+      <span class="trial-badge" id="trialBadge">Sign in to start</span>
+      <button id="accountBtn" type="button">Account</button>
+    </div>
   </div>
 
   <div class="tool-switch">
@@ -397,6 +447,11 @@
   <div class="footer"><strong><span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></strong> · Tempo & Tune · Your musical core.</div>
 </div>
 
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -491,6 +546,281 @@
   let tunerRAF = null;
   let tunerRunning = false;
   const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
+
+  // --- TeTu account, trial and lifetime license ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDdIju6FeP3xuXQo2yfKmxvimj_tLHAimQ",
+    authDomain: "tetu-app-fbc29.firebaseapp.com",
+    projectId: "tetu-app-fbc29",
+    storageBucket: "tetu-app-fbc29.firebasestorage.app",
+    messagingSenderId: "234511484652",
+    appId: "1:234511484652:web:bfef3770be80d7a281c7c9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+  const FV = firebase.firestore.FieldValue;
+
+  const TRIAL_MAX_SESSIONS = 10;
+  const TRIAL_SESSION_MS = 5 * 60 * 1000;
+
+  const accessOverlay = $('accessOverlay');
+  const authView = $('authView');
+  const lockedView = $('lockedView');
+  const authEmail = $('authEmail');
+  const authPassword = $('authPassword');
+  const authMessage = $('authMessage');
+  const buyMessage = $('buyMessage');
+  const trialBadge = $('trialBadge');
+  const accountBtn = $('accountBtn');
+
+  let accessUser = null;
+  let accessData = null;
+  let trialTimer = null;
+  let trialDeadlineMs = 0;
+
+  function showAuth(message='') {
+    authView.style.display = 'block';
+    lockedView.style.display = 'none';
+    authMessage.textContent = message;
+    authMessage.classList.remove('error');
+    accessOverlay.classList.add('show');
+  }
+
+  function showLocked() {
+    authView.style.display = 'none';
+    lockedView.style.display = 'block';
+    accessOverlay.classList.add('show');
+    trialBadge.textContent = 'Trial complete';
+  }
+
+  function hideAccess() {
+    accessOverlay.classList.remove('show');
+  }
+
+  function stopTrialTimer() {
+    if (trialTimer) clearInterval(trialTimer);
+    trialTimer = null;
+    trialDeadlineMs = 0;
+  }
+
+  function renderTrialBadge() {
+    if (!accessUser) {
+      trialBadge.textContent = 'Sign in to start';
+      return;
+    }
+    if (accessData?.licensed === true) {
+      trialBadge.textContent = 'TeTu FULL';
+      return;
+    }
+    const used = Math.max(0, Number(accessData?.trialSessionsUsed || 0));
+    const left = Math.max(0, TRIAL_MAX_SESSIONS - used);
+    if (trialDeadlineMs > Date.now()) {
+      const seconds = Math.max(0, Math.ceil((trialDeadlineMs - Date.now()) / 1000));
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      trialBadge.textContent = `Trial ${m}:${String(s).padStart(2,'0')} · ${left} left`;
+    } else {
+      trialBadge.textContent = left > 0 ? `Trial · ${left} sessions left` : 'Trial complete';
+    }
+  }
+
+  async function loadAccessData(user) {
+    const ref = db.collection('users').doc(user.uid);
+    let snap = await ref.get();
+    if (!snap.exists) {
+      await ref.set({
+        email: user.email || '',
+        licensed: false,
+        licenseType: 'trial',
+        trialSessionsUsed: 0,
+        trialSessionStartedAt: null,
+        createdAt: FV.serverTimestamp()
+      });
+      snap = await ref.get();
+    }
+    accessData = snap.data() || {};
+    renderTrialBadge();
+    return accessData;
+  }
+
+  function activeTrialStartMs() {
+    const value = accessData?.trialSessionStartedAt;
+    if (!value) return 0;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    if (typeof value.toDate === 'function') return value.toDate().getTime();
+    return 0;
+  }
+
+  async function ensureAccess() {
+    if (!accessUser) {
+      showAuth('Sign in or create an account to start your free trial.');
+      return false;
+    }
+    await loadAccessData(accessUser);
+
+    if (accessData.licensed === true) {
+      stopTrialTimer();
+      renderTrialBadge();
+      return true;
+    }
+
+    const used = Math.max(0, Number(accessData.trialSessionsUsed || 0));
+    const startedMs = activeTrialStartMs();
+
+    if (startedMs && Date.now() - startedMs < TRIAL_SESSION_MS) {
+      startTrialCountdown(startedMs + TRIAL_SESSION_MS);
+      return true;
+    }
+
+    if (used >= TRIAL_MAX_SESSIONS) {
+      stopTrialTimer();
+      showLocked();
+      return false;
+    }
+
+    const ref = db.collection('users').doc(accessUser.uid);
+    await db.runTransaction(async tx => {
+      const snap = await tx.get(ref);
+      const data = snap.data() || {};
+
+      if (data.licensed === true) return;
+
+      const currentUsed = Math.max(0, Number(data.trialSessionsUsed || 0));
+      if (currentUsed >= TRIAL_MAX_SESSIONS) throw new Error('TRIAL_COMPLETE');
+
+      tx.update(ref, {
+        trialSessionsUsed: currentUsed + 1,
+        trialSessionStartedAt: FV.serverTimestamp(),
+        lastTrialSessionAt: FV.serverTimestamp()
+      });
+    });
+
+    await loadAccessData(accessUser);
+    startTrialCountdown(Date.now() + TRIAL_SESSION_MS);
+    return true;
+  }
+
+  function startTrialCountdown(deadline) {
+    stopTrialTimer();
+    trialDeadlineMs = deadline;
+    renderTrialBadge();
+
+    trialTimer = setInterval(async () => {
+      renderTrialBadge();
+
+      if (Date.now() < trialDeadlineMs) return;
+
+      stopTrialTimer();
+
+      if (isRunning) stop();
+      if (tunerRunning) stopTuner();
+
+      try {
+        if (accessUser) {
+          await db.collection('users').doc(accessUser.uid).update({
+            trialSessionStartedAt: null
+          });
+          await loadAccessData(accessUser);
+        }
+      } catch (e) {}
+
+      const used = Math.max(0, Number(accessData?.trialSessionsUsed || 0));
+
+      if (used >= TRIAL_MAX_SESSIONS) {
+        showLocked();
+      } else {
+        alert(`Trial session complete. ${TRIAL_MAX_SESSIONS - used} sessions remaining.`);
+        renderTrialBadge();
+      }
+    }, 500);
+  }
+
+  async function login() {
+    authMessage.classList.remove('error');
+    authMessage.textContent = 'Signing in…';
+
+    try {
+      await auth.signInWithEmailAndPassword(authEmail.value.trim(), authPassword.value);
+    } catch (err) {
+      authMessage.classList.add('error');
+      authMessage.textContent =
+        err.code === 'auth/invalid-credential'
+          ? 'Email or password is incorrect.'
+          : (err.message || 'Could not sign in.');
+    }
+  }
+
+  async function register() {
+    authMessage.classList.remove('error');
+    authMessage.textContent = 'Creating account…';
+
+    try {
+      await auth.createUserWithEmailAndPassword(authEmail.value.trim(), authPassword.value);
+    } catch (err) {
+      authMessage.classList.add('error');
+      authMessage.textContent =
+        err.code === 'auth/email-already-in-use'
+          ? 'That email already has a TeTu account. Sign in instead.'
+          : (err.message || 'Could not create account.');
+    }
+  }
+
+  $('loginBtn').onclick = login;
+  $('registerBtn').onclick = register;
+
+  accountBtn.onclick = () => {
+    if (accessUser) auth.signOut();
+    else showAuth();
+  };
+
+  $('lockedLogoutBtn').onclick = () => auth.signOut();
+
+  // Wompi is connected in the next step.
+  $('buyBtn').onclick = () => {
+    buyMessage.textContent = 'Payment connection is being configured.';
+  };
+
+  auth.onAuthStateChanged(async user => {
+    accessUser = user || null;
+    accessData = null;
+    stopTrialTimer();
+
+    if (!user) {
+      accountBtn.textContent = 'Account';
+      showAuth();
+      renderTrialBadge();
+      return;
+    }
+
+    accountBtn.textContent = 'Sign out';
+
+    try {
+      await loadAccessData(user);
+
+      if (accessData.licensed === true) {
+        hideAccess();
+        renderTrialBadge();
+        return;
+      }
+
+      const used = Math.max(0, Number(accessData.trialSessionsUsed || 0));
+      const startedMs = activeTrialStartMs();
+
+      if (startedMs && Date.now() - startedMs < TRIAL_SESSION_MS) {
+        startTrialCountdown(startedMs + TRIAL_SESSION_MS);
+        hideAccess();
+      } else if (used >= TRIAL_MAX_SESSIONS) {
+        showLocked();
+      } else {
+        hideAccess();
+        renderTrialBadge();
+      }
+    } catch (err) {
+      showAuth('Could not load your TeTu account. Check your connection and try again.');
+    }
+  });
+
 
   function switchTool(tool) {
     const tuner = tool === 'tuner';
@@ -605,6 +935,8 @@
       stopTuner();
       return;
     }
+
+    if (!(await ensureAccess())) return;
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       tunerMessage.textContent = 'Microphone access is not supported by this browser.';
@@ -938,8 +1270,11 @@
     updateSessionText(extra);
   }
 
-  function start() {
+  async function start() {
     if (isRunning) return;
+
+    if (!(await ensureAccess())) return;
+
     ensureAudio();
     isRunning = true;
     currentBeat = 0;
@@ -1086,10 +1421,6 @@
       isRunning ? stop() : start();
     }
   });
-
-  window.addEventListener('online', () => $('offlineStatus').textContent = 'Online');
-  window.addEventListener('offline', () => $('offlineStatus').textContent = 'Offline ready');
-  $('offlineStatus').textContent = navigator.onLine ? 'Online · offline capable' : 'Offline ready';
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
