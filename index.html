@@ -189,7 +189,7 @@
   <div class="access-card">
     <div id="authView">
       <h1>Welcome to <span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></h1>
-      <p>Try every feature free: <strong>10 sessions · 5 minutes each.</strong> Create an account so your trial and license stay with you.</p>
+      <p>Try every feature free: <strong>10 sessions · 1 minute each.</strong> Create an account so your trial and license stay with you.</p>
       <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
       <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
       <div class="access-actions">
@@ -562,7 +562,7 @@
   const FV = firebase.firestore.FieldValue;
 
   const TRIAL_MAX_SESSIONS = 10;
-  const TRIAL_SESSION_MS = 5 * 60 * 1000;
+  const TRIAL_SESSION_MS = 1 * 60 * 1000;
 
   const accessOverlay = $('accessOverlay');
   const authView = $('authView');
