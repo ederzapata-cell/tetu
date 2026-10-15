@@ -159,94 +159,18 @@
     .mode-note{font-size:.74rem;color:var(--muted);line-height:1.45;margin-top:8px}
 
 
-    /* TeTu access / trial */
-    .account-pill{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-    .account-pill button{border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:999px;padding:7px 11px;font-size:.78rem;font-weight:800}
-    .trial-badge{font-size:.78rem;color:var(--text);border:1px solid var(--border);background:rgba(46,196,182,.08);padding:7px 11px;border-radius:999px;font-weight:800}
-    .access-overlay{position:fixed;inset:0;z-index:500;background:rgba(5,8,11,.88);backdrop-filter:blur(12px);display:none;align-items:flex-start;justify-content:center;padding:18px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-    .access-overlay.show{display:flex}
-    .access-card{width:min(94vw,470px);background:var(--panel);border:1px solid var(--border);border-radius:26px;box-shadow:var(--shadow);padding:26px;margin:auto 0}
-    .access-card h1{margin:0 0 7px;font-size:1.65rem}
-    .access-card p{color:var(--muted);line-height:1.5;margin:7px 0 18px}
-    .access-card input{width:100%;border:1px solid var(--border);background:#10141c;color:var(--text);border-radius:13px;padding:12px;margin:5px 0;min-height:46px}
-    .access-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-    .access-actions button,.buy-btn{border:1px solid var(--border);border-radius:14px;min-height:48px;font-weight:900}
-    .access-actions .login-btn,.buy-btn{border:0;background:linear-gradient(180deg,#43d8ca,#2EC4B6);color:#071816}
-    .access-message{min-height:20px;margin-top:10px;color:var(--muted);font-size:.8rem;line-height:1.4}
-    .access-message.error{color:#ff8585}
-    .forgot-password{display:block;width:max-content;max-width:100%;margin:7px 0 0 auto;padding:0;border:0;background:transparent;color:#73ddd4;font-size:.78rem;font-weight:800;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-    .forgot-password:hover{color:#9ce9e3}
-    .buy-btn{width:100%;margin-top:8px;font-size:1rem}
-    .price{font-size:2rem;font-weight:900;margin:10px 0 0;color:var(--text)}
-    .payment-box{margin:14px 0 10px;padding:14px;border:1px solid var(--border);border-radius:18px;background:#10141c;text-align:center}
-    .payment-qr{display:block;width:min(100%,300px);height:auto;margin:0 auto 12px;border-radius:14px;background:#fff}
-    .payment-label{margin:0 0 6px;color:var(--muted);font-size:.78rem;font-weight:800;letter-spacing:.03em;text-transform:uppercase}
-    .payment-email{margin:0;color:var(--text);font-weight:900;overflow-wrap:anywhere}
-    .payment-note{margin:10px 0 0!important;font-size:.78rem;line-height:1.45!important}
-    .secondary-pay-btn{width:100%;margin-top:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;min-height:44px;font-weight:800}
-    .payment-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:10px}
-    .payment-action-btn{width:100%;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;min-height:44px;font-weight:800}
-    @media(max-width:520px){.payment-actions{grid-template-columns:1fr}}
-    .tiny-access{font-size:.72rem;color:var(--muted);margin-top:10px;text-align:center}
-    @media(max-width:760px){.account-pill{justify-content:flex-start}.access-actions{grid-template-columns:1fr}}
-
     @media(max-width:760px){.grid{grid-template-columns:1fr}.topbar{align-items:flex-start}.status{display:none}.visual{width:min(78vw,315px)}}
   </style>
 </head>
 <body>
 <div id="flashLayer" class="flash-layer"></div>
 
-<div id="accessOverlay" class="access-overlay show">
-  <div class="access-card">
-    <div id="authView">
-      <h1>Welcome to <span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></h1>
-      <p>Try every feature free: <strong>10 sessions · 1 minute each.</strong> Create an account so your trial and license stay with you.</p>
-      <input id="authEmail" type="email" autocomplete="email" placeholder="Email">
-      <input id="authPassword" type="password" autocomplete="current-password" placeholder="Password">
-      <button id="forgotPasswordBtn" class="forgot-password" type="button">Forgot your password?</button>
-      <div class="access-actions">
-        <button id="loginBtn" class="login-btn" type="button">Sign in</button>
-        <button id="registerBtn" type="button">Create account</button>
-      </div>
-      <div id="authMessage" class="access-message"></div>
-    </div>
-    <div id="lockedView" style="display:none">
-      <h1>Your TeTu trial is complete.</h1>
-      <p>You used your 10 full trial sessions. Unlock TeTu permanently and keep every feature.</p>
-      <div class="price">$29,900 COP</div>
-      <p>One payment · Lifetime access · No subscription.</p>
-
-      <div class="payment-box">
-        <img class="payment-qr" src="assets/tetu-payment-qr.jpeg" alt="TEKKI Bre-B payment QR">
-        <div class="payment-label">License will be activated for</div>
-        <div id="paymentAccountEmail" class="payment-email">—</div>
-        <p class="payment-note">Pay exactly <strong>$29,900 COP</strong> using the Bre-B key or save the QR and pay from your banking app. Then send your payment receipt to TEKKI on WhatsApp.</p>
-
-        <div class="payment-actions">
-          <button id="copyPaymentKeyBtn" class="payment-action-btn" type="button">COPY BRE-B KEY</button>
-          <button id="saveQrBtn" class="payment-action-btn" type="button">SAVE QR TO PAY</button>
-        </div>
-      </div>
-
-      <button id="buyBtn" class="buy-btn" type="button">SEND RECEIPT BY WHATSAPP</button>
-      <button id="checkActivationBtn" class="secondary-pay-btn" type="button">CHECK ACTIVATION</button>
-      <button id="lockedLogoutBtn" type="button" style="width:100%;margin-top:9px;border:1px solid var(--border);background:var(--panel2);color:var(--text);border-radius:14px;min-height:44px;font-weight:800">Use another account</button>
-      <div id="buyMessage" class="access-message"></div>
-    </div>
-    <div class="tiny-access">TeTu · Tempo & Tune · Your musical core.</div>
-  </div>
-</div>
-
-
 <div class="app">
   <div class="topbar">
     <div class="brand">
       <img src="assets/tetu-logo-horizontal-transparent.png" alt="TeTu — Tempo & Tune" class="brand-logo">
     </div>
-    <div class="account-pill">
-      <span class="trial-badge" id="trialBadge">Sign in to start</span>
-      <button id="accountBtn" type="button">Account</button>
-    </div>
+    <div class="status" id="offlineStatus">Offline ready</div>
   </div>
 
   <div class="tool-switch">
@@ -309,16 +233,16 @@
               <option value="soft">Soft Click</option>
               <option value="wood">Wood</option>
               <option value="clap">Clap</option>
-              <option value="hat">Hi-Hat</option>
+              <option value="drums">Drum Kit</option>
             </select>
           </label>
         </div>
         <label class="check"><input id="accentFirst" type="checkbox" checked> Accent first beat</label>
         <div class="volume-line">
           <label style="width:100%">Volume
-            <input id="volume" type="range" min="0" max="100" value="70">
+            <input id="volume" type="range" min="0" max="100" value="50">
           </label>
-          <output id="volumeValue">70%</output>
+          <output id="volumeValue">50%</output>
         </div>
       </div>
 
@@ -473,11 +397,6 @@
   <div class="footer"><strong><span style="color:#2EC4B6">Te</span><span style="color:#FF8A5B">Tu</span></strong> · Tempo & Tune · Your musical core.</div>
 </div>
 
-
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
 <script>
 (() => {
   const $ = id => document.getElementById(id);
@@ -572,382 +491,6 @@
   let tunerRAF = null;
   let tunerRunning = false;
   const NOTE_NAMES = ['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','B'];
-
-  // --- TeTu account, trial and lifetime license ---
-  const firebaseConfig = {
-    apiKey: "AIzaSyDdIju6FeP3xuXQo2yfKmxvimj_tLHAimQ",
-    authDomain: "tetu-app-fbc29.firebaseapp.com",
-    projectId: "tetu-app-fbc29",
-    storageBucket: "tetu-app-fbc29.firebasestorage.app",
-    messagingSenderId: "234511484652",
-    appId: "1:234511484652:web:bfef3770be80d7a281c7c9"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const FV = firebase.firestore.FieldValue;
-
-  const TRIAL_MAX_SESSIONS = 10;
-  const TRIAL_SESSION_MS = 1 * 60 * 1000;
-
-  const accessOverlay = $('accessOverlay');
-  const authView = $('authView');
-  const lockedView = $('lockedView');
-  const authEmail = $('authEmail');
-  const authPassword = $('authPassword');
-  const authMessage = $('authMessage');
-  const buyMessage = $('buyMessage');
-  const paymentAccountEmail = $('paymentAccountEmail');
-  const trialBadge = $('trialBadge');
-  const accountBtn = $('accountBtn');
-  const TEKKI_WHATSAPP = '573043891900';
-  const TEKKI_BREB_KEY = '0093064672';
-  const TETU_QR_PATH = 'assets/tetu-payment-qr.jpeg';
-  const copyPaymentKeyBtn = $('copyPaymentKeyBtn');
-  const saveQrBtn = $('saveQrBtn');
-
-  let accessUser = null;
-  let accessData = null;
-  let trialTimer = null;
-  let trialDeadlineMs = 0;
-
-  function showAuth(message='') {
-    authView.style.display = 'block';
-    lockedView.style.display = 'none';
-    authMessage.textContent = message;
-    authMessage.classList.remove('error');
-    accessOverlay.classList.add('show');
-  }
-
-  function showLocked() {
-    authView.style.display = 'none';
-    lockedView.style.display = 'block';
-    accessOverlay.classList.add('show');
-    trialBadge.textContent = 'Trial complete';
-    paymentAccountEmail.textContent = accessUser?.email || accessData?.email || 'Signed-in TeTu account';
-  }
-
-  function hideAccess() {
-    accessOverlay.classList.remove('show');
-  }
-
-  function stopTrialTimer() {
-    if (trialTimer) clearInterval(trialTimer);
-    trialTimer = null;
-    trialDeadlineMs = 0;
-  }
-
-  function renderTrialBadge() {
-    if (!accessUser) {
-      trialBadge.textContent = 'Sign in to start';
-      return;
-    }
-    if (accessData?.licensed === true) {
-      trialBadge.textContent = 'TeTu FULL';
-      return;
-    }
-    const used = Math.max(0, Number(accessData?.trialSessionsUsed || 0));
-    const left = Math.max(0, TRIAL_MAX_SESSIONS - used);
-    if (trialDeadlineMs > Date.now()) {
-      const seconds = Math.max(0, Math.ceil((trialDeadlineMs - Date.now()) / 1000));
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      trialBadge.textContent = `Trial ${m}:${String(s).padStart(2,'0')} · ${left} left`;
-    } else {
-      trialBadge.textContent = left > 0 ? `Trial · ${left} sessions left` : 'Trial complete';
-    }
-  }
-
-  async function loadAccessData(user) {
-    const ref = db.collection('users').doc(user.uid);
-    let snap = await ref.get();
-    if (!snap.exists) {
-      await ref.set({
-        email: user.email || '',
-        licensed: false,
-        licenseType: 'trial',
-        trialSessionsUsed: 0,
-        trialSessionStartedAt: null,
-        createdAt: FV.serverTimestamp()
-      });
-      snap = await ref.get();
-    }
-    accessData = snap.data() || {};
-    renderTrialBadge();
-    return accessData;
-  }
-
-  function activeTrialStartMs() {
-    const value = accessData?.trialSessionStartedAt;
-    if (!value) return 0;
-    if (typeof value.toMillis === 'function') return value.toMillis();
-    if (typeof value.toDate === 'function') return value.toDate().getTime();
-    return 0;
-  }
-
-  async function ensureAccess() {
-    if (!accessUser) {
-      showAuth('Sign in or create an account to start your free trial.');
-      return false;
-    }
-    await loadAccessData(accessUser);
-
-    if (accessData.licensed === true) {
-      stopTrialTimer();
-      renderTrialBadge();
-      return true;
-    }
-
-    const used = Math.max(0, Number(accessData.trialSessionsUsed || 0));
-    const startedMs = activeTrialStartMs();
-
-    if (startedMs && Date.now() - startedMs < TRIAL_SESSION_MS) {
-      startTrialCountdown(startedMs + TRIAL_SESSION_MS);
-      return true;
-    }
-
-    if (used >= TRIAL_MAX_SESSIONS) {
-      stopTrialTimer();
-      showLocked();
-      return false;
-    }
-
-    const ref = db.collection('users').doc(accessUser.uid);
-    await db.runTransaction(async tx => {
-      const snap = await tx.get(ref);
-      const data = snap.data() || {};
-
-      if (data.licensed === true) return;
-
-      const currentUsed = Math.max(0, Number(data.trialSessionsUsed || 0));
-      if (currentUsed >= TRIAL_MAX_SESSIONS) throw new Error('TRIAL_COMPLETE');
-
-      tx.update(ref, {
-        trialSessionsUsed: currentUsed + 1,
-        trialSessionStartedAt: FV.serverTimestamp(),
-        lastTrialSessionAt: FV.serverTimestamp()
-      });
-    });
-
-    await loadAccessData(accessUser);
-    startTrialCountdown(Date.now() + TRIAL_SESSION_MS);
-    return true;
-  }
-
-  function startTrialCountdown(deadline) {
-    stopTrialTimer();
-    trialDeadlineMs = deadline;
-    renderTrialBadge();
-
-    trialTimer = setInterval(async () => {
-      renderTrialBadge();
-
-      if (Date.now() < trialDeadlineMs) return;
-
-      stopTrialTimer();
-
-      if (isRunning) stop();
-      if (tunerRunning) stopTuner();
-
-      try {
-        if (accessUser) {
-          await db.collection('users').doc(accessUser.uid).update({
-            trialSessionStartedAt: null
-          });
-          await loadAccessData(accessUser);
-        }
-      } catch (e) {}
-
-      const used = Math.max(0, Number(accessData?.trialSessionsUsed || 0));
-
-      if (used >= TRIAL_MAX_SESSIONS) {
-        showLocked();
-      } else {
-        alert(`Trial session complete. ${TRIAL_MAX_SESSIONS - used} sessions remaining.`);
-        renderTrialBadge();
-      }
-    }, 500);
-  }
-
-  async function login() {
-    authMessage.classList.remove('error');
-    authMessage.textContent = 'Signing in…';
-
-    try {
-      await auth.signInWithEmailAndPassword(authEmail.value.trim(), authPassword.value);
-    } catch (err) {
-      authMessage.classList.add('error');
-      authMessage.textContent =
-        err.code === 'auth/invalid-credential'
-          ? 'Email or password is incorrect.'
-          : (err.message || 'Could not sign in.');
-    }
-  }
-
-  async function register() {
-    authMessage.classList.remove('error');
-    authMessage.textContent = 'Creating account…';
-
-    try {
-      await auth.createUserWithEmailAndPassword(authEmail.value.trim(), authPassword.value);
-    } catch (err) {
-      authMessage.classList.add('error');
-      authMessage.textContent =
-        err.code === 'auth/email-already-in-use'
-          ? 'That email already has a TeTu account. Sign in instead.'
-          : (err.message || 'Could not create account.');
-    }
-  }
-
-  async function resetPassword() {
-    const email = authEmail.value.trim();
-    authMessage.classList.remove('error');
-
-    if (!email) {
-      authMessage.classList.add('error');
-      authMessage.textContent = 'Enter your email first, then tap “Forgot your password?”.';
-      authEmail.focus();
-      return;
-    }
-
-    authMessage.textContent = 'Sending password reset email…';
-
-    try {
-      await auth.sendPasswordResetEmail(email);
-      authMessage.textContent = 'Password reset email sent. Check your inbox and spam folder.';
-    } catch (err) {
-      authMessage.classList.add('error');
-      authMessage.textContent =
-        err.code === 'auth/invalid-email'
-          ? 'Enter a valid email address.'
-          : (err.message || 'Could not send the password reset email.');
-    }
-  }
-
-  $('loginBtn').onclick = login;
-  $('registerBtn').onclick = register;
-  $('forgotPasswordBtn').onclick = resetPassword;
-
-  accountBtn.onclick = () => {
-    if (accessUser) auth.signOut();
-    else showAuth();
-  };
-
-  $('lockedLogoutBtn').onclick = () => auth.signOut();
-
-  copyPaymentKeyBtn.onclick = async () => {
-    buyMessage.classList.remove('error');
-    try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(TEKKI_BREB_KEY);
-      } else {
-        const textarea = document.createElement('textarea');
-        textarea.value = TEKKI_BREB_KEY;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-      }
-      buyMessage.textContent = 'Bre-B key copied. Open your banking app and paste it to pay.';
-    } catch (err) {
-      buyMessage.classList.add('error');
-      buyMessage.textContent = `Could not copy automatically. Bre-B key: ${TEKKI_BREB_KEY}`;
-    }
-  };
-
-  saveQrBtn.onclick = () => {
-    buyMessage.classList.remove('error');
-    const link = document.createElement('a');
-    link.href = TETU_QR_PATH;
-    link.download = 'TEKKI_TeTu_BreB_QR.jpeg';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    buyMessage.textContent = 'QR ready. Open it from your photos or files to pay.';
-  };
-
-  $('buyBtn').onclick = () => {
-    if (!accessUser) {
-      showAuth('Sign in to continue.');
-      return;
-    }
-
-    const email = accessUser.email || accessData?.email || '';
-    const message = [
-      'Hello, I have paid $29,900 COP to unlock TeTu.',
-      'Product: TeTu — Lifetime access',
-      `TeTu account: ${email}`,
-      '',
-      'I am attaching my payment receipt so you can activate my lifetime access.'
-    ].join('\n');
-
-    const url = `https://wa.me/${TEKKI_WHATSAPP}?text=${encodeURIComponent(message)}`;
-    buyMessage.textContent = 'Opening WhatsApp…';
-    window.location.href = url;
-  };
-
-  $('checkActivationBtn').onclick = async () => {
-    if (!accessUser) return showAuth('Sign in to check your activation.');
-    buyMessage.classList.remove('error');
-    buyMessage.textContent = 'Checking activation…';
-
-    try {
-      await loadAccessData(accessUser);
-      if (accessData?.licensed === true) {
-        hideAccess();
-        renderTrialBadge();
-        buyMessage.textContent = '';
-      } else {
-        buyMessage.textContent = 'Your payment has not been activated yet. If you already paid, send the receipt to TEKKI on WhatsApp.';
-      }
-    } catch (err) {
-      buyMessage.classList.add('error');
-      buyMessage.textContent = 'Could not check your activation. Check your connection and try again.';
-    }
-  };
-
-  auth.onAuthStateChanged(async user => {
-    accessUser = user || null;
-    accessData = null;
-    stopTrialTimer();
-
-    if (!user) {
-      accountBtn.textContent = 'Account';
-      showAuth();
-      renderTrialBadge();
-      return;
-    }
-
-    accountBtn.textContent = 'Sign out';
-
-    try {
-      await loadAccessData(user);
-
-      if (accessData.licensed === true) {
-        hideAccess();
-        renderTrialBadge();
-        return;
-      }
-
-      const used = Math.max(0, Number(accessData.trialSessionsUsed || 0));
-      const startedMs = activeTrialStartMs();
-
-      if (startedMs && Date.now() - startedMs < TRIAL_SESSION_MS) {
-        startTrialCountdown(startedMs + TRIAL_SESSION_MS);
-        hideAccess();
-      } else if (used >= TRIAL_MAX_SESSIONS) {
-        showLocked();
-      } else {
-        hideAccess();
-        renderTrialBadge();
-      }
-    } catch (err) {
-      showAuth('Could not load your TeTu account. Check your connection and try again.');
-    }
-  });
-
 
   function switchTool(tool) {
     const tuner = tool === 'tuner';
@@ -1063,8 +606,6 @@
       return;
     }
 
-    if (!(await ensureAccess())) return;
-
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       tunerMessage.textContent = 'Microphone access is not supported by this browser.';
       return;
@@ -1147,10 +688,10 @@
   }
 
   function masterVolume(mult=1) {
-    return Math.max(0, Math.min(1, Number(volume.value) / 100)) * mult;
+    return Math.max(0, Math.min(1, Number(volume.value) / 100)) * mult * 4;
   }
 
-  function toneAt(time, accent=false) {
+  function toneAt(time, accent=false, beat=0) {
     if (mode === 'visual') return;
     ensureAudio();
     const type = soundType.value;
@@ -1167,28 +708,69 @@
       filter.frequency.value = accent ? 1500 : 1200;
       filter.Q.value = 0.8;
       const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(masterVolume(accent ? 0.45 : 0.28), time);
+      gain.gain.setValueAtTime(masterVolume(accent ? 1.00 : 0.60), time);
       gain.gain.exponentialRampToValueAtTime(0.001, time + 0.06);
       src.connect(filter).connect(gain).connect(audioCtx.destination);
       src.start(time); src.stop(time + 0.07);
       return;
     }
 
-    if (type === 'hat') {
-      const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
-      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
-      const src = audioCtx.createBufferSource();
-      src.buffer = buffer;
-      const filter = audioCtx.createBiquadFilter();
-      filter.type = 'highpass';
-      filter.frequency.value = 6500;
-      const gain = audioCtx.createGain();
-      gain.gain.setValueAtTime(masterVolume(accent ? 0.24 : 0.13), time);
-      gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
-      src.connect(filter).connect(gain).connect(audioCtx.destination);
-      src.start(time); src.stop(time + 0.04);
+    if (type === 'drums') {
+      // Compact rock/pop drum kit: kick on odd beats, snare on even beats,
+      // with closed hi-hat on eighth notes.
+      const beatDuration = 60 / bpm;
+
+      function drumHat(at, level=0.28) {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.035);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i=0;i<bufferSize;i++) data[i] = Math.random()*2-1;
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'highpass';
+        filter.frequency.value = 6500;
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(masterVolume(level), at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.04);
+        src.connect(filter).connect(gain).connect(audioCtx.destination);
+        src.start(at); src.stop(at + 0.045);
+      }
+
+      function drumKick(at) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(145, at);
+        osc.frequency.exponentialRampToValueAtTime(48, at + 0.11);
+        gain.gain.setValueAtTime(masterVolume(0.72), at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.16);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(at); osc.stop(at + 0.17);
+      }
+
+      function drumSnare(at) {
+        const bufferSize = Math.floor(audioCtx.sampleRate * 0.12);
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * Math.exp(-i/(bufferSize/5));
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1800;
+        filter.Q.value = 0.7;
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(masterVolume(0.58), at);
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.12);
+        src.connect(filter).connect(gain).connect(audioCtx.destination);
+        src.start(at); src.stop(at + 0.13);
+      }
+
+      drumHat(time, accent ? 0.36 : 0.28);
+      drumHat(time + beatDuration / 2, 0.22);
+      if (beat % 2 === 0) drumKick(time);
+      else drumSnare(time);
       return;
     }
 
@@ -1198,7 +780,7 @@
     osc.frequency.setValueAtTime(
       type === 'wood' ? (accent ? 650 : 500) : (accent ? 420 : 320), time
     );
-    gain.gain.setValueAtTime(masterVolume(type === 'wood' ? (accent ? 0.38 : 0.25) : (accent ? 0.30 : 0.18)), time);
+    gain.gain.setValueAtTime(masterVolume(type === 'wood' ? (accent ? 1.00 : 0.65) : (accent ? 0.85 : 0.55)), time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + (type === 'wood' ? 0.05 : 0.075));
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(time); osc.stop(time + 0.08);
@@ -1211,7 +793,7 @@
     const gain = audioCtx.createGain();
     osc.type = 'sine';
     osc.frequency.setValueAtTime(900, time);
-    gain.gain.setValueAtTime(masterVolume(0.09), time);
+    gain.gain.setValueAtTime(masterVolume(0.35), time);
     gain.gain.exponentialRampToValueAtTime(0.001, time + 0.035);
     osc.connect(gain).connect(audioCtx.destination);
     osc.start(time);
@@ -1245,7 +827,7 @@
       silentCurrently = false;
     }
 
-    if (!silentCurrently || inCountIn) toneAt(time, accent);
+    if (!silentCurrently || inCountIn) toneAt(time, accent, beat);
 
     const delay = Math.max(0, (time - audioCtx.currentTime) * 1000);
 
@@ -1397,11 +979,8 @@
     updateSessionText(extra);
   }
 
-  async function start() {
+  function start() {
     if (isRunning) return;
-
-    if (!(await ensureAccess())) return;
-
     ensureAudio();
     isRunning = true;
     currentBeat = 0;
@@ -1548,6 +1127,10 @@
       isRunning ? stop() : start();
     }
   });
+
+  window.addEventListener('online', () => $('offlineStatus').textContent = 'Online');
+  window.addEventListener('offline', () => $('offlineStatus').textContent = 'Offline ready');
+  $('offlineStatus').textContent = navigator.onLine ? 'Online · offline capable' : 'Offline ready';
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
     navigator.serviceWorker.register('./sw.js').catch(()=>{});
